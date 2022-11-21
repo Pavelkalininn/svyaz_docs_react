@@ -1,4 +1,4 @@
-# Enterprise word documents quick filler (in progress). Expected result is a React web and desctop native application.
+# Enterprise word documents quick filler (in progress). Expected result is a React web and desktop native application.
 
 I am starts the project developing. Have not workflow yet.
 
