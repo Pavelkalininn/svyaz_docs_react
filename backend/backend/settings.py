@@ -1,17 +1,17 @@
 import os
 from pathlib import Path
 
-import dotenv
+from dotenv import load_dotenv
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-dotenv.load_dotenv()
+load_dotenv()
 
 
-SECRET_KEY = os.getenv('SECRET_KEY')
+SECRET_KEY = os.getenv('SECRET_KEY', default='tokentokentokentokentokentokentokentokentokent')
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -20,6 +20,12 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'rest_framework',
+    'rest_framework.authtoken',
+    'django_filters',
+    'djoser',
+    'documents',
+    'api'
 ]
 
 MIDDLEWARE = [
@@ -34,10 +40,12 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = 'backend.urls'
 
+CSRF_TRUSTED_ORIGINS = ['diploma.sytes.net', 'localhost']
+
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': ['static'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -79,6 +87,10 @@ USE_I18N = True
 USE_L10N = True
 USE_TZ = True
 STATIC_URL = '/static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'static')
+
+MEDIA_URL = "/media/"
+MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 INITIALS_REGEX = r'^[A-ZА-ЯЁ][a-zа-яё]+ [A-ZА-ЯЁ]\.(?:[A-ZА-ЯЁ]\.|)\Z'
 FULL_NAME_REGEX = (
     r'^[A-ZА-ЯЁ][a-zа-яё]+ [A-ZА-ЯЁ][a-zа-яё]+(?: [A-ZА-ЯЁ][a-zа-яё]+|)\Z'
@@ -87,4 +99,24 @@ PHONE_REGEX = r'^\+[0-9]{10,18}\Z'
 EMAIL_REGEX = r'^.{2,}@.{2,}\..{2,}\Z'
 GTIN_REGEX = r'^[0-9]{8,14}\Z'
 
+USER_ROLE_CHOICES = (
+    ('user', 'USER'),
+    ('staff', 'STAFF'),
+    ('admin', 'ADMIN'),
+)
+
+CHAR_FIELD_MAX_SIZE = 255
+CHAR_FIELD_MIDDLE_SIZE = 127
+CHAR_FIELD_SMALL_SIZE = 40
+CHAR_FIELD_PHONE_SIZE = 18
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.TokenAuthentication',
+        'rest_framework.authentication.BasicAuthentication',
+        'rest_framework.authentication.SessionAuthentication',
+    ],
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+}
+AUTH_USER_MODEL = 'documents.User'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
