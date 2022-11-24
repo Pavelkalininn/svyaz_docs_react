@@ -1,25 +1,35 @@
-from django.contrib.auth.models import AbstractUser
-from django.core.validators import RegexValidator
+from django.contrib.auth.models import (
+    AbstractUser,
+)
+from django.core.validators import (
+    RegexValidator,
+)
 from django.db.models import (
+    CASCADE,
+    DO_NOTHING,
     CharField,
     DateField,
+    EmailField,
     ForeignKey,
-    FilePathField,
+    ManyToManyField,
     Model,
-    CASCADE,
+    OneToOneField,
     PositiveBigIntegerField,
-    DO_NOTHING, TextField, ManyToManyField, EmailField, OneToOneField,
+    TextField,
+    UniqueConstraint,
 )
 
 from backend.settings import (
-    INITIALS_REGEX,
-    FULL_NAME_REGEX,
-    PHONE_REGEX,
-    EMAIL_REGEX,
-    GTIN_REGEX,
     CHAR_FIELD_MAX_SIZE,
     CHAR_FIELD_MIDDLE_SIZE,
-    CHAR_FIELD_SMALL_SIZE, CHAR_FIELD_PHONE_SIZE, USER_ROLE_CHOICES
+    CHAR_FIELD_PHONE_SIZE,
+    CHAR_FIELD_SMALL_SIZE,
+    EMAIL_REGEX,
+    FULL_NAME_REGEX,
+    GTIN_REGEX,
+    INITIALS_REGEX,
+    PHONE_REGEX,
+    USER_ROLE_CHOICES,
 )
 
 
@@ -60,6 +70,7 @@ class User(AbstractUser):
 
 class Application(Model):
     number = CharField(
+        unique=True,
         max_length=CHAR_FIELD_MAX_SIZE,
         verbose_name='Номер заявки'
     )
@@ -72,25 +83,31 @@ class Application(Model):
 
     class Meta:
         ordering = ['-date']
+        verbose_name = 'Заявка'
+        verbose_name_plural = 'Заявки'
 
 
-class Proxy(Model):
+class Applicant(Model):
     name = CharField(
+        unique=True,
         max_length=CHAR_FIELD_MAX_SIZE,
-        verbose_name='номер/наименование'
+        verbose_name='Наименование заявителя'
     )
-    date_issue = DateField(
-        verbose_name='дата выдачи'
-    )
-    date_expiry = DateField(
-        verbose_name='дата окончания действия'
+
+    user = ForeignKey(
+        User,
+        related_name='applicants',
+        verbose_name='пользователь',
+        on_delete=CASCADE
     )
 
     def __str__(self):
         return self.name
 
     class Meta:
-        ordering = ['-date_issue']
+        ordering = ['name']
+        verbose_name = 'Заявитель'
+        verbose_name_plural = 'Заявители'
 
 
 class Signatory(Model):
@@ -116,10 +133,11 @@ class Signatory(Model):
         max_length=CHAR_FIELD_MIDDLE_SIZE,
         verbose_name='Должность'
     )
-    proxy = ForeignKey(
-        Proxy,
-        related_name='signatory',
-        verbose_name='доверенность',
+
+    applicant = ForeignKey(
+        Applicant,
+        related_name='signatories',
+        verbose_name='заявитель',
         on_delete=CASCADE
     )
 
@@ -128,34 +146,45 @@ class Signatory(Model):
 
     class Meta:
         ordering = ['short_name']
+        verbose_name = 'Подписант'
+        verbose_name_plural = 'Подписанты'
+        constraints = [
+            UniqueConstraint(
+                fields=['short_name', 'position'],
+                name='unique_signatory'),
+        ]
 
 
-class Agreement(Model):
-    number = CharField(
-        max_length=CHAR_FIELD_MIDDLE_SIZE,
-        verbose_name='Номер соглашения'
+class Proxy(Model):
+    name = CharField(
+        max_length=CHAR_FIELD_MAX_SIZE,
+        verbose_name='номер/наименование'
     )
     date_issue = DateField(
-        verbose_name='Дата соглашения'
+        verbose_name='дата выдачи'
     )
     date_expiry = DateField(
-        verbose_name='Срок действия'
+        null=True,
+        blank=True,
+        verbose_name='дата окончания действия'
+    )
+    signatory = ForeignKey(
+        Signatory,
+        related_name='proxies',
+        verbose_name='Подписант',
+        on_delete=CASCADE
     )
 
     def __str__(self):
-        return self.number
+        return self.name
 
     class Meta:
         ordering = ['-date_issue']
+        verbose_name = 'Доверенность'
+        verbose_name_plural = 'Доверенности'
 
 
 class ApplicantInformation(Model):
-    agreements = ForeignKey(
-        Agreement,
-        related_name='applicant_information',
-        verbose_name='соглашения',
-        on_delete=CASCADE
-    )
     ogrn = PositiveBigIntegerField(
         verbose_name='ОГРН',
     )
@@ -192,7 +221,15 @@ class ApplicantInformation(Model):
         verbose_name='дата начала актуальности этих документов'
     )
     date_expiry = DateField(
+        null=True,
+        blank=True,
         verbose_name='дата окончания актуальности этих документов'
+    )
+    applicant = ForeignKey(
+        Applicant,
+        related_name='informations',
+        verbose_name='Заявитель',
+        on_delete=CASCADE
     )
 
     def __str__(self):
@@ -200,59 +237,80 @@ class ApplicantInformation(Model):
 
     class Meta:
         ordering = ['-date_issue']
+        verbose_name = 'Карточка организации'
+        verbose_name_plural = 'Карточки организации'
+        constraints = [
+            UniqueConstraint(
+                fields=['ogrn', 'date_issue'],
+                name='unique_applicant_information'),
+        ]
 
 
-class Applicant(Model):
-    name = CharField(
-        max_length=CHAR_FIELD_MAX_SIZE,
-        verbose_name='Условное наименование работы'
+class Agreement(Model):
+    number = CharField(
+        unique=True,
+        max_length=CHAR_FIELD_MIDDLE_SIZE,
+        verbose_name='Номер соглашения'
     )
-    signatories = ForeignKey(
-        Signatory,
-        related_name='applicant',
-        verbose_name='подписанты',
-        on_delete=CASCADE
+    date_issue = DateField(
+        verbose_name='Дата соглашения'
     )
-    informations = ForeignKey(
+    date_expiry = DateField(
+        null=True,
+        blank=True,
+        verbose_name='Срок действия'
+    )
+    applicant_information = ForeignKey(
         ApplicantInformation,
-        related_name='applicant',
-        verbose_name='информация о заявителе (документы)',
+        related_name='agreements',
+        verbose_name='параметры заявителя',
         on_delete=CASCADE
     )
 
     def __str__(self):
-        return self.name
+        return self.number
 
     class Meta:
-        ordering = ['name']
+        ordering = ['-date_issue']
+        verbose_name = 'Соглашение'
+        verbose_name_plural = 'Соглашения'
 
 
 class Standard(Model):
     name = CharField(
+        unique=True,
         max_length=CHAR_FIELD_MAX_SIZE,
         verbose_name='Наименование стандарта'
     )
     voluntary_docs = CharField(
+        unique=True,
         max_length=CHAR_FIELD_MAX_SIZE,
         verbose_name='Документы применяемые на добровольной основе'
     )
     requirement_name = CharField(
+        unique=True,
         max_length=CHAR_FIELD_MAX_SIZE,
         verbose_name='Наименование требования'
     )
     short_requirement_name = CharField(
+        unique=True,
         max_length=CHAR_FIELD_MAX_SIZE,
         verbose_name='Короткое наименование требования (только номер)'
     )
     requirement_modify_name = CharField(
+        unique=True,
         max_length=CHAR_FIELD_MAX_SIZE,
         verbose_name='Наименование пунктов и таблиц из ТР ТС'
     )
     methods = CharField(
+        null=True,
+        blank=True,
         max_length=CHAR_FIELD_MAX_SIZE,
         verbose_name='Методы испытаний'
     )
     standard = CharField(
+        null=True,
+        blank=True,
         max_length=CHAR_FIELD_MAX_SIZE,
         verbose_name='стандарты!?'
     )
@@ -262,10 +320,13 @@ class Standard(Model):
 
     class Meta:
         ordering = ['name']
+        verbose_name = 'Стандарт'
+        verbose_name_plural = 'Стандарты'
 
 
 class CertificationObject(Model):
     name = CharField(
+        unique=True,
         max_length=CHAR_FIELD_SMALL_SIZE,
         verbose_name='объект сертификации'
     )
@@ -275,10 +336,13 @@ class CertificationObject(Model):
 
     class Meta:
         ordering = ['name']
+        verbose_name = 'Объект сертификации'
+        verbose_name_plural = 'Объекты сертификации'
 
 
 class Reglament(Model):
     name = CharField(
+        unique=True,
         max_length=CHAR_FIELD_MIDDLE_SIZE,
         verbose_name='регламент'
     )
@@ -288,6 +352,8 @@ class Reglament(Model):
 
     class Meta:
         ordering = ['name']
+        verbose_name = 'Регламент'
+        verbose_name_plural = 'Регламенты'
 
 
 class Schem(Model):
@@ -301,10 +367,13 @@ class Schem(Model):
 
     class Meta:
         ordering = ['name']
+        verbose_name = 'Схема сертификации'
+        verbose_name_plural = 'Схемы сертификации'
 
 
 class TnVedKey(Model):
     name = PositiveBigIntegerField(
+        unique=True,
         verbose_name='Код ТН ВЭД ЕАЭС'
     )
     description = CharField(
@@ -317,94 +386,8 @@ class TnVedKey(Model):
 
     class Meta:
         ordering = ['name']
-
-
-class ConfirmationDecision(Model):
-    number = CharField(
-        max_length=CHAR_FIELD_MIDDLE_SIZE,
-        verbose_name='Наименование решения о подтверждении СМК'
-    )
-    date = DateField(
-        verbose_name='Дата решения о подтверждении СМК'
-    )
-    signatory = CharField(
-        max_length=CHAR_FIELD_MIDDLE_SIZE,
-        verbose_name='Фамилия и инициалы эксперта в решении о подтверждении',
-        validators=(
-            RegexValidator(
-                regex=INITIALS_REGEX
-            ),
-        )
-    )
-
-    def __str__(self):
-        return self.number
-
-    class Meta:
-        ordering = ['number']
-
-
-class ManufacturingCompanies(Model):
-    name = CharField(
-        max_length=CHAR_FIELD_MAX_SIZE,
-        verbose_name='Наименование производственной площадки'
-    )
-    location = CharField(
-        max_length=CHAR_FIELD_MAX_SIZE,
-        verbose_name='Место нахождения производственной площадки'
-    )
-    work_location = CharField(
-        max_length=CHAR_FIELD_MAX_SIZE,
-        verbose_name='Место осуществления производственной площадки'
-    )
-
-    def __str__(self):
-        return self.name
-
-    class Meta:
-        ordering = ['name']
-
-
-class QMS(Model):
-    number = CharField(
-        max_length=CHAR_FIELD_MAX_SIZE,
-        verbose_name='Наименование изготовителя'
-    )
-    date_issue = DateField(
-        verbose_name='Дата выдачи'
-    )
-    date_expiry = DateField(
-        verbose_name='Дата окончания действия'
-    )
-    body_certificate = CharField(
-        max_length=CHAR_FIELD_SMALL_SIZE,
-        verbose_name='Аттестат аккредитации органа по сертификации СМК'
-    )
-    body_name = CharField(
-        max_length=CHAR_FIELD_MAX_SIZE,
-        verbose_name='НАименование органа по сертификации СМК'
-    )
-    signatory = CharField(
-        max_length=CHAR_FIELD_MIDDLE_SIZE,
-        verbose_name='Фамилия и инициалы эксперта в сертификате СМК',
-        validators=(
-            RegexValidator(
-                regex=INITIALS_REGEX
-            ),
-        )
-    )
-    confirmation_decision = ForeignKey(
-        ConfirmationDecision,
-        related_name='qms',
-        verbose_name='Решение о подтверждении СМК',
-        on_delete=CASCADE
-    )
-
-    def __str__(self):
-        return self.number
-
-    class Meta:
-        ordering = ['number']
+        verbose_name = 'Код ТН ВЭД ЕАЭС'
+        verbose_name_plural = 'Коды ТН ВЭД ЕАЭС'
 
 
 class Manufacturer(Model):
@@ -420,16 +403,121 @@ class Manufacturer(Model):
         max_length=CHAR_FIELD_MAX_SIZE,
         verbose_name='Адрес места осуществления изготовителя'
     )
-    manufacturing_companies = ForeignKey(
-        ManufacturingCompanies,
-        related_name='manufacturer',
-        verbose_name='Производственные площадки',
+
+    def __str__(self):
+        return self.name
+
+    class Meta:
+        ordering = ['name']
+        verbose_name = 'Изготовитель'
+        verbose_name_plural = 'Изготовители'
+        constraints = [
+            UniqueConstraint(
+                fields=['name', 'location', 'work_location'],
+                name='unique_manufacturer'),
+        ]
+
+
+class QMS(Model):
+    number = CharField(
+        unique=True,
+        max_length=CHAR_FIELD_MAX_SIZE,
+        verbose_name='Наименование изготовителя'
+    )
+    date_issue = DateField(
+        verbose_name='Дата выдачи'
+    )
+    date_expiry = DateField(
+        verbose_name='Дата окончания действия'
+    )
+    body_certificate = CharField(
+        max_length=CHAR_FIELD_SMALL_SIZE,
+        verbose_name='Аттестат аккредитации органа по сертификации СМК'
+    )
+    body_name = CharField(
+        max_length=CHAR_FIELD_MAX_SIZE,
+        verbose_name='Наименование органа по сертификации СМК'
+    )
+    signatory = CharField(
+        null=True,
+        blank=True,
+        max_length=CHAR_FIELD_MIDDLE_SIZE,
+        verbose_name='Фамилия и инициалы эксперта в сертификате СМК',
+        validators=(
+            RegexValidator(
+                regex=INITIALS_REGEX
+            ),
+        )
+    )
+    manufacturer = ForeignKey(
+        Manufacturer,
+        related_name='qms',
+        verbose_name='Изготовитель',
         on_delete=CASCADE
+    )
+
+    def __str__(self):
+        return self.number
+
+    class Meta:
+        ordering = ['number']
+        verbose_name = 'Сертификат СМК'
+        verbose_name_plural = 'Сертификаты СМК'
+
+
+class ConfirmationDecision(Model):
+    number = CharField(
+        unique=True,
+        max_length=CHAR_FIELD_MIDDLE_SIZE,
+        verbose_name='Наименование решения о подтверждении СМК'
+    )
+    date = DateField(
+        verbose_name='Дата решения о подтверждении СМК'
+    )
+    signatory = CharField(
+        null=True,
+        blank=True,
+        max_length=CHAR_FIELD_MIDDLE_SIZE,
+        verbose_name='Фамилия и инициалы эксперта в решении о подтверждении',
+        validators=(
+            RegexValidator(
+                regex=INITIALS_REGEX
+            ),
+        )
     )
     qms = ForeignKey(
         QMS,
-        related_name='manufacturer',
+        related_name='confirmation_decision',
         verbose_name='Сертификат СМК',
+        on_delete=CASCADE
+    )
+
+    def __str__(self):
+        return self.number
+
+    class Meta:
+        ordering = ['number']
+        verbose_name = 'Решение о подтверждении СМК'
+        verbose_name_plural = 'Решения о подтверждении СМК'
+
+
+class ManufacturingCompanies(Model):
+    name = CharField(
+        max_length=CHAR_FIELD_MAX_SIZE,
+        verbose_name='Наименование производственной площадки'
+    )
+    location = CharField(
+        max_length=CHAR_FIELD_MAX_SIZE,
+        verbose_name='Место нахождения производственной площадки'
+    )
+    work_location = CharField(
+        max_length=CHAR_FIELD_MAX_SIZE,
+        verbose_name='Место осуществления производственной площадки'
+    )
+    manufacturer = ForeignKey(
+        Manufacturer,
+        related_name='manufacturing_companies',
+        verbose_name='Изготовитель',
         on_delete=CASCADE
     )
 
@@ -438,10 +526,41 @@ class Manufacturer(Model):
 
     class Meta:
         ordering = ['name']
+        verbose_name = 'Производственная площадка'
+        verbose_name_plural = 'Производственные площадки'
+        constraints = [
+            UniqueConstraint(
+                fields=['name', 'location', 'work_location'],
+                name='unique_manufacturing_companies'),
+        ]
+
+
+class CertificationBody(Model):
+    name = CharField(
+        unique=True,
+        max_length=CHAR_FIELD_MAX_SIZE,
+        verbose_name='Наименование органа'
+    )
+    attestation = CharField(
+        max_length=CHAR_FIELD_MIDDLE_SIZE,
+        verbose_name='Аттестат аккредитации'
+    )
+    attestation_date = DateField(
+        verbose_name='Дата выдачи аттестата'
+    )
+
+    def __str__(self):
+        return self.name
+
+    class Meta:
+        ordering = ['name']
+        verbose_name = 'Орган по сертификации продукции'
+        verbose_name_plural = 'Органы по сертфикации продукции'
 
 
 class Expert(Model):
     name = CharField(
+        unique=True,
         max_length=CHAR_FIELD_MIDDLE_SIZE,
         verbose_name='Фамилия и инициалы эксперта',
         validators=(
@@ -459,16 +578,25 @@ class Expert(Model):
             ),
         )
     )
+    body = ForeignKey(
+        CertificationBody,
+        related_name='experts',
+        verbose_name='Орган по сертификации',
+        on_delete=CASCADE
+    )
 
     def __str__(self):
         return self.name
 
     class Meta:
         ordering = ['name']
+        verbose_name = 'Эксперт'
+        verbose_name_plural = 'Эксперты'
 
 
 class Head(Model):
     name = CharField(
+        unique=True,
         max_length=CHAR_FIELD_MIDDLE_SIZE,
         verbose_name='Фамилия и инициалы руководителя',
         validators=(
@@ -486,36 +614,10 @@ class Head(Model):
             ),
         )
     )
-
-    def __str__(self):
-        return self.name
-
-    class Meta:
-        ordering = ['name']
-
-
-class CertificationBody(Model):
-    name = CharField(
-        max_length=CHAR_FIELD_MAX_SIZE,
-        verbose_name='Наименование органа'
-    )
-    attestation = CharField(
-        max_length=CHAR_FIELD_MIDDLE_SIZE,
-        verbose_name='Аттестат аккредитации'
-    )
-    attestation_date = DateField(
-        verbose_name='Дата выдачи аттестата'
-    )
-    experts = ForeignKey(
-        Expert,
-        related_name='body',
-        verbose_name='Эксперты',
-        on_delete=CASCADE
-    )
-    head = ForeignKey(
-        Head,
-        related_name='body',
-        verbose_name='Руководители',
+    body = ForeignKey(
+        CertificationBody,
+        related_name='head',
+        verbose_name='Орган по сертификации',
         on_delete=CASCADE
     )
 
@@ -524,10 +626,13 @@ class CertificationBody(Model):
 
     class Meta:
         ordering = ['name']
+        verbose_name = 'Руководитель органа'
+        verbose_name_plural = 'Руководители органов'
 
 
 class Project(Model):
     name = CharField(
+        unique=True,
         max_length=CHAR_FIELD_MAX_SIZE,
         verbose_name='Условное наименование работы'
     )
@@ -539,7 +644,8 @@ class Project(Model):
     )
     application = OneToOneField(
         Application,
-        related_name='projects',
+        unique=True,
+        related_name='project',
         verbose_name='заявка',
         on_delete=CASCADE
     )
@@ -566,6 +672,8 @@ class Project(Model):
         on_delete=CASCADE
     )
     GTIN_key = CharField(
+        null=True,
+        blank=True,
         max_length=CHAR_FIELD_PHONE_SIZE,
         verbose_name='Код GTIN',
         validators=(
@@ -601,11 +709,25 @@ class Project(Model):
     prod_name = TextField(
         verbose_name='Наименование продукции'
     )
-    tn_ved_keys = ManyToManyField(TnVedKey, through='ProjectTnVedKey')
+    tn_ved_keys = ManyToManyField(
+        TnVedKey,
+        related_name='projects',
+    )
     manufacturer = ForeignKey(
         Manufacturer,
-        related_name='project',
+        related_name='projects',
         verbose_name='Изготовитель',
+        on_delete=CASCADE
+    )
+    manufacturing_companies = ManyToManyField(
+        ManufacturingCompanies,
+        related_name='projects',
+        verbose_name='Производственные площадки',
+    )
+    qms = ForeignKey(
+        QMS,
+        related_name='projects',
+        verbose_name='Сертификат СМК',
         on_delete=CASCADE
     )
     docs_with_application = CharField(
@@ -613,60 +735,88 @@ class Project(Model):
         verbose_name='Предоставленные с заявкой документы'
     )
     additional_information = CharField(
+        null=True,
+        blank=True,
         max_length=CHAR_FIELD_MAX_SIZE,
         verbose_name='Дополнительная информация'
     )
     application_decision_date = DateField(
+        null=True,
+        blank=True,
         verbose_name='Дата решения по заявке'
     )
     first_expert = ForeignKey(
         Expert,
-        related_name='first_expert_to_project',
+        null=True,
+        blank=True,
+        related_name='first_expert_to_projects',
         verbose_name='Первый эксперт',
         on_delete=CASCADE
     )
     second_expert = ForeignKey(
         Expert,
-        related_name='second_expert_to_project',
+        null=True,
+        blank=True,
+        related_name='second_expert_to_projects',
         verbose_name='Второй эксперт',
         on_delete=CASCADE
     )
     certificate_expert = ForeignKey(
         Expert,
-        related_name='cert_expert_to_project',
+        null=True,
+        blank=True,
+        related_name='cert_expert_to_projects',
         verbose_name='Эксперт в сертификате',
         on_delete=CASCADE
     )
     product_evaluation_work_plan_date = DateField(
+        null=True,
+        blank=True,
         verbose_name='Дата плана работ по оценке'
     )
     certification_body_head = ForeignKey(
         Head,
-        related_name='project',
+        null=True,
+        blank=True,
+        related_name='projects',
         verbose_name='Руководитель в сертификате',
         on_delete=CASCADE
     )
     expert_opinion_date = DateField(
+        null=True,
+        blank=True,
         verbose_name='Дата заключения эксперта'
     )
     release_decision_date = DateField(
+        null=True,
+        blank=True,
         verbose_name='Дата решения о выдаче'
     )
     certificate_issue_date = DateField(
+        null=True,
+        blank=True,
         verbose_name='Дата заключения эксперта'
     )
     certificate_expiry_date = DateField(
+        null=True,
+        blank=True,
         verbose_name='Дата выдачи сертификата'
     )
     certificate_number = CharField(
+        null=True,
+        blank=True,
         max_length=CHAR_FIELD_PHONE_SIZE,
         verbose_name='Номер сертификата'
     )
     certificate_application_1_form_number = CharField(
+        null=True,
+        blank=True,
         max_length=CHAR_FIELD_PHONE_SIZE,
         verbose_name='Номер формы приложения 1 к сертификату'
     )
     certificate_application_2_form_number = CharField(
+        null=True,
+        blank=True,
         max_length=CHAR_FIELD_PHONE_SIZE,
         verbose_name='Номер формы приложения 2 к сертификату'
     )
@@ -676,24 +826,5 @@ class Project(Model):
 
     class Meta:
         ordering = ['name']
-
-
-class ProjectTnVedKey(Model):
-    project = ForeignKey(
-        Project,
-        related_name='project_key',
-        verbose_name='проект',
-        on_delete=CASCADE,
-    )
-    key = ForeignKey(
-        TnVedKey,
-        related_name='key_project',
-        verbose_name='ключ ТН ВЭД',
-        on_delete=CASCADE,
-    )
-
-    def __str__(self):
-        return f'{self.project} -  {self.key}'
-
-    class Meta:
-        ordering = ['key']
+        verbose_name = 'Проект'
+        verbose_name_plural = 'Проекты'
