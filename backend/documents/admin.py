@@ -1,32 +1,91 @@
-from django.contrib import admin
-
-from .models import (
-    User,
-    Application,
-    Proxy,
-    Signatory,
-    Agreement,
-    ApplicantInformation,
-    Applicant,
-    Standard,
-    CertificationObject,
-    Reglament,
-    Schem,
-    TnVedKey,
-    ConfirmationDecision,
-    ManufacturingCompanies,
-    QMS,
-    Manufacturer,
-    Expert,
-    Head,
-    CertificationBody,
-    Project,
-    ProjectTnVedKey,
+from django.contrib import (
+    admin,
+)
+from django.contrib.auth import (
+    get_user_model,
+)
+from django.contrib.auth.admin import (
+    UserAdmin,
 )
 
-EMPTY_VALUE = 'значение не задано'
+from .models import (
+    QMS,
+    Agreement,
+    Applicant,
+    ApplicantInformation,
+    Application,
+    CertificationBody,
+    CertificationObject,
+    ConfirmationDecision,
+    Expert,
+    Head,
+    Manufacturer,
+    ManufacturingCompanies,
+    Project,
+    Proxy,
+    Reglament,
+    Schem,
+    Signatory,
+    Standard,
+    TnVedKey,
+)
 
-admin.site.register(User)
+User = get_user_model()
+admin.site.empty_value_display = '-значение не задано-'
+
+UserAdmin.fieldsets += (('Extra Fields', {'fields': ('role', )}),)
+
+
+class CustomUserAdmin(UserAdmin):
+    list_display = (
+        'id',
+        'username',
+        'first_name',
+        'last_name',
+        'email',
+        'role'
+    )
+    search_fields = ('username', 'email', 'first_name')
+    list_filter = ('username', 'email', 'first_name', 'role')
+
+
+class ProjectsAdmin(admin.ModelAdmin):
+    search_fields = (
+        'name',
+        'certification_body__name',
+        'application__number',
+        'applicant__name',
+        'standard__name',
+        'reglament__name',
+        'schem__name',
+        'prod_name',
+        'manufacturer__name'
+    )
+    list_filter = (
+        'name',
+        'certification_body',
+        'application',
+        'applicant',
+        'standard',
+        'reglament',
+        'schem',
+        'prod_name',
+        'manufacturer'
+    )
+    list_display = (
+        'name',
+        'certification_body',
+        'application',
+        'applicant',
+        'standard',
+        'reglament',
+        'schem',
+        'prod_name',
+        'manufacturer'
+    )
+
+
+admin.site.register(User, CustomUserAdmin)
 admin.site.register(Application)
 admin.site.register(Proxy)
 admin.site.register(Signatory)
@@ -45,5 +104,4 @@ admin.site.register(Manufacturer)
 admin.site.register(Expert)
 admin.site.register(Head)
 admin.site.register(CertificationBody)
-admin.site.register(Project)
-admin.site.register(ProjectTnVedKey)
+admin.site.register(Project, ProjectsAdmin)
