@@ -68,36 +68,16 @@ class User(AbstractUser):
         verbose_name_plural = 'Пользователи'
 
 
-class Application(Model):
-    number = CharField(
-        unique=True,
-        max_length=CHAR_FIELD_MAX_SIZE,
-        verbose_name='Номер заявки'
-    )
-    date = DateField(
-        verbose_name='Дата заявки'
-    )
-
-    def __str__(self):
-        return self.number
-
-    class Meta:
-        ordering = ['-date']
-        verbose_name = 'Заявка'
-        verbose_name_plural = 'Заявки'
-
-
 class Applicant(Model):
     name = CharField(
         unique=True,
         max_length=CHAR_FIELD_MAX_SIZE,
         verbose_name='Наименование заявителя'
     )
-
-    user = ForeignKey(
+    owner = ForeignKey(
         User,
-        related_name='applicants',
-        verbose_name='пользователь',
+        related_name='owner_applicants',
+        verbose_name='Владелец',
         on_delete=CASCADE
     )
 
@@ -140,6 +120,12 @@ class Signatory(Model):
         verbose_name='заявитель',
         on_delete=CASCADE
     )
+    owner = ForeignKey(
+        User,
+        related_name='signatories',
+        verbose_name='Владелец',
+        on_delete=CASCADE
+    )
 
     def __str__(self):
         return self.short_name
@@ -172,6 +158,12 @@ class Proxy(Model):
         Signatory,
         related_name='proxies',
         verbose_name='Подписант',
+        on_delete=CASCADE
+    )
+    owner = ForeignKey(
+        User,
+        related_name='proxies',
+        verbose_name='Владелец',
         on_delete=CASCADE
     )
 
@@ -231,6 +223,12 @@ class ApplicantInformation(Model):
         verbose_name='Заявитель',
         on_delete=CASCADE
     )
+    owner = ForeignKey(
+        User,
+        related_name='applicant_informations',
+        verbose_name='Владелец',
+        on_delete=CASCADE
+    )
 
     def __str__(self):
         return self.applicant_location
@@ -264,6 +262,12 @@ class Agreement(Model):
         ApplicantInformation,
         related_name='agreements',
         verbose_name='параметры заявителя',
+        on_delete=CASCADE
+    )
+    owner = ForeignKey(
+        User,
+        related_name='agreements',
+        verbose_name='Владелец',
         on_delete=CASCADE
     )
 
@@ -403,6 +407,16 @@ class Manufacturer(Model):
         max_length=CHAR_FIELD_MAX_SIZE,
         verbose_name='Адрес места осуществления изготовителя'
     )
+    country = CharField(
+        max_length=CHAR_FIELD_SMALL_SIZE,
+        verbose_name='Страна изготовления'
+    )
+    owner = ForeignKey(
+        User,
+        related_name='manufacturers',
+        verbose_name='Владелец',
+        on_delete=CASCADE
+    )
 
     def __str__(self):
         return self.name
@@ -422,7 +436,7 @@ class QMS(Model):
     number = CharField(
         unique=True,
         max_length=CHAR_FIELD_MAX_SIZE,
-        verbose_name='Наименование изготовителя'
+        verbose_name='Номер сертификата СМК'
     )
     date_issue = DateField(
         verbose_name='Дата выдачи'
@@ -453,6 +467,12 @@ class QMS(Model):
         Manufacturer,
         related_name='qms',
         verbose_name='Изготовитель',
+        on_delete=CASCADE
+    )
+    owner = ForeignKey(
+        User,
+        related_name='qms',
+        verbose_name='Владелец',
         on_delete=CASCADE
     )
 
@@ -518,6 +538,12 @@ class ManufacturingCompanies(Model):
         Manufacturer,
         related_name='manufacturing_companies',
         verbose_name='Изготовитель',
+        on_delete=CASCADE
+    )
+    owner = ForeignKey(
+        User,
+        related_name='manufacturing_companies',
+        verbose_name='Владелец',
         on_delete=CASCADE
     )
 
@@ -630,44 +656,79 @@ class Head(Model):
         verbose_name_plural = 'Руководители органов'
 
 
-class Project(Model):
-    name = CharField(
-        unique=True,
+class Protocol(Model):
+    number = CharField(
         max_length=CHAR_FIELD_MAX_SIZE,
-        verbose_name='Условное наименование работы'
+        verbose_name='Номер протокола'
+    )
+    date = DateField(
+        verbose_name='Дата протокола'
+    )
+    body_certificate = CharField(
+        max_length=CHAR_FIELD_SMALL_SIZE,
+        verbose_name='Аттестат аккредитации испытательной лаборатории'
+    )
+    body_name = CharField(
+        max_length=CHAR_FIELD_MAX_SIZE,
+        verbose_name=(
+            'Полное наименование лаборатории в родительном падеже'
+            ' (испытательной лабораторией ...)'
+        )
+    )
+    signatory = CharField(
+        null=True,
+        blank=True,
+        max_length=CHAR_FIELD_MIDDLE_SIZE,
+        verbose_name='Фамилия и инициалы руководителя ИЛ в протоколе',
+        validators=(
+            RegexValidator(
+                regex=INITIALS_REGEX
+            ),
+        )
+    )
+    owner = ForeignKey(
+        User,
+        related_name='protocols',
+        verbose_name='Владелец',
+        on_delete=CASCADE
+    )
+
+    def __str__(self):
+        return f'{self.number} от {self.date}'
+
+    class Meta:
+        ordering = ['number']
+        verbose_name = 'Протокол'
+        verbose_name_plural = 'Протоколы'
+        constraints = [
+            UniqueConstraint(
+                fields=['number', 'owner'],
+                name='unique_applicant_protocol'),
+        ]
+
+
+class Application(Model):
+    applicant = ForeignKey(
+        Applicant,
+        related_name='applications',
+        verbose_name='заявитель',
+        on_delete=CASCADE
     )
     certification_body = ForeignKey(
         CertificationBody,
-        related_name='projects',
+        related_name='applications',
         verbose_name='Орган по сертификации',
-        on_delete=CASCADE
-    )
-    application = OneToOneField(
-        Application,
-        unique=True,
-        related_name='project',
-        verbose_name='заявка',
-        on_delete=CASCADE
-    )
-    path_to_folder = CharField(
-        max_length=CHAR_FIELD_MAX_SIZE,
-        verbose_name='путь к папке с работой',
-    )
-    applicant = ForeignKey(
-        Applicant,
-        related_name='projects',
-        verbose_name='заявитель',
         on_delete=CASCADE
     )
     signatory = ForeignKey(
         Signatory,
-        related_name='projects',
+        related_name='applications',
         verbose_name='подписант',
         on_delete=DO_NOTHING
     )
     standard = ForeignKey(
         Standard,
-        related_name='projects',
+        related_name='applications',
         verbose_name='стандарт',
         on_delete=CASCADE
     )
@@ -684,25 +745,25 @@ class Project(Model):
     )
     certification_object = ForeignKey(
         CertificationObject,
-        related_name='projects',
+        related_name='applications',
         verbose_name='объект сертификации',
         on_delete=CASCADE
     )
     reglament = ForeignKey(
         Reglament,
-        related_name='projects',
+        related_name='applications',
         verbose_name='регламент',
         on_delete=CASCADE
     )
     schem = ForeignKey(
         Schem,
-        related_name='projects',
+        related_name='applications',
         verbose_name='схема сертификации',
         on_delete=CASCADE
     )
     applicant_representative_who_doing_application = ForeignKey(
         Signatory,
-        related_name='representative_to_projects',
+        related_name='representative_to_applications',
         verbose_name='представитель заявителя',
         on_delete=CASCADE
     )
@@ -711,27 +772,30 @@ class Project(Model):
     )
     tn_ved_keys = ManyToManyField(
         TnVedKey,
-        related_name='projects',
+        related_name='applications',
     )
     manufacturer = ForeignKey(
         Manufacturer,
-        related_name='projects',
+        related_name='applications',
         verbose_name='Изготовитель',
         on_delete=CASCADE
     )
     manufacturing_companies = ManyToManyField(
         ManufacturingCompanies,
-        related_name='projects',
+        related_name='applications',
         verbose_name='Производственные площадки',
+    )
+    protocols = ManyToManyField(
+        Protocol,
+        verbose_name='Протоколы испытаний приложенные к заявке'
     )
     qms = ForeignKey(
         QMS,
-        related_name='projects',
+        related_name='applications',
         verbose_name='Сертификат СМК',
         on_delete=CASCADE
     )
-    docs_with_application = CharField(
-        max_length=CHAR_FIELD_MAX_SIZE,
+    docs_with_application = TextField(
         verbose_name='Предоставленные с заявкой документы'
     )
     additional_information = CharField(
@@ -740,47 +804,122 @@ class Project(Model):
         max_length=CHAR_FIELD_MAX_SIZE,
         verbose_name='Дополнительная информация'
     )
+    owner = ForeignKey(
+        User,
+        related_name='applications',
+        verbose_name='Владелец',
+        on_delete=CASCADE
+    )
+
+    def __str__(self):
+        return f'{self.applicant} \n {self.standard} \n {self.prod_name}'
+
+    class Meta:
+        ordering = ['-id']
+        verbose_name = 'Заявка'
+        verbose_name_plural = 'Заявки'
+
+
+class Work(Model):
+    name = CharField(
+        unique=True,
+        max_length=CHAR_FIELD_MAX_SIZE,
+        verbose_name='Условное наименование работы'
+    )
+    application = OneToOneField(
+        Application,
+        unique=True,
+        related_name='work',
+        verbose_name='заявка',
+        on_delete=CASCADE
+    )
+    path_to_folder = CharField(
+        max_length=CHAR_FIELD_MAX_SIZE,
+        verbose_name='путь к папке с работой',
+    )
+    number = CharField(
+        unique=True,
+        max_length=CHAR_FIELD_MAX_SIZE,
+        verbose_name='Номер заявки'
+    )
+    date = DateField(
+        verbose_name='Дата заявки'
+    )
     application_decision_date = DateField(
         null=True,
         blank=True,
         verbose_name='Дата решения по заявке'
     )
-    first_expert = ForeignKey(
+    application_analyze_expert = ForeignKey(
         Expert,
         null=True,
         blank=True,
-        related_name='first_expert_to_projects',
-        verbose_name='Первый эксперт',
+        related_name='application_analyze_expert_works',
+        verbose_name='Эксперт в заключении анализа',
         on_delete=CASCADE
     )
-    second_expert = ForeignKey(
+    evaluation_expert = ForeignKey(
         Expert,
         null=True,
         blank=True,
-        related_name='second_expert_to_projects',
-        verbose_name='Второй эксперт',
+        related_name='evaluation_expert_works',
+        verbose_name='Эксперт ответственный за оценивание',
+        on_delete=CASCADE
+    )
+    evaluation_analyze_expert = ForeignKey(
+        Expert,
+        null=True,
+        blank=True,
+        related_name='evaluation_analyze_expert_works',
+        verbose_name='Эксперт по анализу результатов оценивания',
+        on_delete=CASCADE
+    )
+    analysis_production_head = ForeignKey(
+        Expert,
+        null=True,
+        blank=True,
+        related_name='analysis_production_head_works',
+        verbose_name='Руководитель комиссии',
+        on_delete=CASCADE
+    )
+    conclusion_expert = ForeignKey(
+        Expert,
+        null=True,
+        blank=True,
+        related_name='conclusion_expert_works',
+        verbose_name='Эксперт в заключении',
         on_delete=CASCADE
     )
     certificate_expert = ForeignKey(
         Expert,
         null=True,
         blank=True,
-        related_name='cert_expert_to_projects',
+        related_name='certificate_expert_works',
         verbose_name='Эксперт в сертификате',
         on_delete=CASCADE
     )
+
+    decision_head = ForeignKey(
+        Head,
+        null=True,
+        blank=True,
+        related_name='decision_head_works',
+        verbose_name='Руководитель ОС в решении о проведении',
+        on_delete=CASCADE
+    )
+    certificate_head = ForeignKey(
+        Head,
+        null=True,
+        blank=True,
+        related_name='certificate_head_works',
+        verbose_name='Руководитель в сертификате',
+        on_delete=CASCADE
+    )
+
     product_evaluation_work_plan_date = DateField(
         null=True,
         blank=True,
         verbose_name='Дата плана работ по оценке'
-    )
-    certification_body_head = ForeignKey(
-        Head,
-        null=True,
-        blank=True,
-        related_name='projects',
-        verbose_name='Руководитель в сертификате',
-        on_delete=CASCADE
     )
     expert_opinion_date = DateField(
         null=True,
@@ -820,11 +959,86 @@ class Project(Model):
         max_length=CHAR_FIELD_PHONE_SIZE,
         verbose_name='Номер формы приложения 2 к сертификату'
     )
+    application_registration_form_notes = CharField(
+        null=True,
+        blank=True,
+        max_length=CHAR_FIELD_SMALL_SIZE,
+        verbose_name=(
+            'Примечания по регистрации заявки (в форму регистрации заявок)'
+        )
+    )
+    registry_certificate_confirmation_notes = CharField(
+        null=True,
+        blank=True,
+        max_length=CHAR_FIELD_SMALL_SIZE,
+        verbose_name=(
+            'Примечания о выдаче сертификата (в форму регистрации заявок)'
+        )
+    )
+    sampling_identification_with_dt = CharField(
+        null=True,
+        blank=True,
+        max_length=CHAR_FIELD_SMALL_SIZE,
+        verbose_name=(
+            'Отбор образцов, заключение идентификации,'
+            ' дата (для Формы регистрации заявок)'
+        )
+    )
+    directing_with_dt = CharField(
+        null=True,
+        blank=True,
+        max_length=CHAR_FIELD_SMALL_SIZE,
+        verbose_name='№ направления в ИЛ, дата (для Формы регистрации заявок)'
+    )
+    protocols = ManyToManyField(
+        Protocol,
+        verbose_name='Протоколы испытаний полученные в ходе сертификации'
+    )
+    conclusion_application_analyze_date = DateField(
+        null=True,
+        blank=True,
+        verbose_name='Дата заключения анализа заявки'
+    )
+    evaluation_planned_date = DateField(
+        null=True,
+        blank=True,
+        verbose_name='Запланированный срок оценивания'
+    )
+    evaluation_analyze_planned_date = DateField(
+        null=True,
+        blank=True,
+        verbose_name='Запланированный срок анализа результатов оценивания'
+    )
+    preliminary_analysis_production_protocol_date = DateField(
+        null=True,
+        blank=True,
+        verbose_name='Дата протокола предварительного анализа производства'
+    )
+    act_analysis_production_date = DateField(
+        null=True,
+        blank=True,
+        verbose_name='Дата акта анализа состояния производства'
+    )
+    analysis_production_duration_till_date = DateField(
+        null=True,
+        blank=True,
+        verbose_name='Срок проведения анализа сотсояния производства (По)'
+    )
+    conclusion_of_conformity_assessment_date = DateField(
+        null=True,
+        blank=True,
+        verbose_name='Дата заключения анализа'
+    )
+    analysis_production_registry_notes = DateField(
+        null=True,
+        blank=True,
+        verbose_name='Примечания по регистрации анализа состояния продукции'
+    )
 
     def __str__(self):
         return self.name
 
     class Meta:
-        ordering = ['name']
-        verbose_name = 'Проект'
-        verbose_name_plural = 'Проекты'
+        ordering = ['-id']
+        verbose_name = 'Работа органа'
+        verbose_name_plural = 'Работы органа'
