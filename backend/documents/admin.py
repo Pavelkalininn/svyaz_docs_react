@@ -21,13 +21,14 @@ from .models import (
     Head,
     Manufacturer,
     ManufacturingCompanies,
-    Project,
+    Protocol,
     Proxy,
     Reglament,
     Schem,
     Signatory,
     Standard,
     TnVedKey,
+    Work,
 )
 
 User = get_user_model()
@@ -49,11 +50,9 @@ class CustomUserAdmin(UserAdmin):
     list_filter = ('username', 'email', 'first_name', 'role')
 
 
-class ProjectsAdmin(admin.ModelAdmin):
+class ApplicationAdmin(admin.ModelAdmin):
     search_fields = (
-        'name',
         'certification_body__name',
-        'application__number',
         'applicant__name',
         'standard__name',
         'reglament__name',
@@ -62,9 +61,7 @@ class ProjectsAdmin(admin.ModelAdmin):
         'manufacturer__name'
     )
     list_filter = (
-        'name',
         'certification_body',
-        'application',
         'applicant',
         'standard',
         'reglament',
@@ -73,9 +70,7 @@ class ProjectsAdmin(admin.ModelAdmin):
         'manufacturer'
     )
     list_display = (
-        'name',
         'certification_body',
-        'application',
         'applicant',
         'standard',
         'reglament',
@@ -85,8 +80,34 @@ class ProjectsAdmin(admin.ModelAdmin):
     )
 
 
+class WorksAdmin(admin.ModelAdmin):
+    search_fields = (
+        'name',
+        'application__certification_body__name',
+        'number',
+        'date',
+        'application__applicant__name',
+        'application__standard__name',
+        'application__reglament__name',
+        'application__schem__name',
+        'application__prod_name',
+        'application__manufacturer__name'
+    )
+    list_filter = (
+        'name',
+        'application__certification_body',
+        'number',
+        'application__applicant',
+        'application__standard',
+        'application__reglament',
+        'application__schem',
+        'application__prod_name',
+        'application__manufacturer'
+    )
+
+
 admin.site.register(User, CustomUserAdmin)
-admin.site.register(Application)
+admin.site.register(Application, ApplicationAdmin)
 admin.site.register(Proxy)
 admin.site.register(Signatory)
 admin.site.register(Agreement)
@@ -103,5 +124,6 @@ admin.site.register(QMS)
 admin.site.register(Manufacturer)
 admin.site.register(Expert)
 admin.site.register(Head)
+admin.site.register(Protocol)
 admin.site.register(CertificationBody)
-admin.site.register(Project, ProjectsAdmin)
+admin.site.register(Work, WorksAdmin)
