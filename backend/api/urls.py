@@ -33,22 +33,29 @@ router = routers.DefaultRouter()
 
 router.register('tn_ved_keys', TnVedKeyViewSet, basename='tn_ved_key-list')
 router.register('standards', StandardViewSet, basename='standard-list')
-router.register('signatories', SignatoryViewSet, basename='signatory-list')
 router.register('schems', SchemViewSet, basename='schem-list')
 router.register('reglaments', ReglamentViewSet, basename='reglament-list')
+router.register('heads', HeadViewSet, basename='head-list')
+router.register('experts', ExpertViewSet, basename='expert-list')
+router.register('works', WorkViewSet, basename='work-list')
 
 router.register(
-    'proxies',
+    r'signatories/(?P<applicant_id>\d+)',
+    SignatoryViewSet,
+    basename='signatory-list'
+)
+router.register(
+    r'proxies/(?P<applicant_id>\d+)',
     ProxyViewSet,
     basename='proxy-list'
 )
 router.register(
-    'applications',
+    r'applications/(?P<applicant_id>\d+)',
     ApplicationViewSet,
     basename='application-list'
 )
 router.register(
-    'manufacturing_companies',
+    r'manufacturing_companies/(?P<applicant_id>\d+)',
     ManufacturingCompaniesViewSet,
     basename='manufacturing_company-list'
 )
@@ -58,18 +65,7 @@ router.register(
     basename='manufacturer-list'
 )
 router.register(
-    'heads',
-    HeadViewSet,
-    basename='head-list'
-)
-
-router.register(
-    'experts',
-    ExpertViewSet,
-    basename='expert-list'
-)
-router.register(
-    'confirmation_decisions',
+    r'confirmation_decisions/(?P<applicant_id>\d+)',
     ConfirmationDecisionViewSet,
     basename='confirmation_decision-list'
 )
@@ -84,28 +80,18 @@ router.register(
     basename='certification_body-list'
 )
 router.register(
-    'works',
-    WorkViewSet,
-    basename='work-list'
-)
-
-router.register(
-    'applicant_information',
+    r'applicant_information/(?P<applicant_id>\d+)',
     ApplicantInformationViewSet,
     basename='applicant_information-list'
 )
+router.register('applicants', ApplicantViewSet, basename='applicant-list')
 router.register(
-    'applicants',
-    ApplicantViewSet,
-    basename='applicant-list'
-)
-router.register(
-    'agreements',
+    r'agreements/(?P<applicant_id>\d+)',
     AgreementViewSet,
     basename='agreement-list'
 )
 router.register(
-    'protocols',
+    r'protocols/(?P<applicant_id>\d+)',
     ProtocolViewSet,
     basename='protocol-list'
 )
