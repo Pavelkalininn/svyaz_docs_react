@@ -21,6 +21,7 @@ from .models import (
     Head,
     Manufacturer,
     ManufacturingCompanies,
+    Pattern,
     Protocol,
     Proxy,
     Reglament,
@@ -127,3 +128,4 @@ admin.site.register(Head)
 admin.site.register(Protocol)
 admin.site.register(CertificationBody)
 admin.site.register(Work, WorksAdmin)
+admin.site.register(Pattern)

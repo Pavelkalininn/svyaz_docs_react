@@ -10,6 +10,7 @@ from api.views import (
     HeadViewSet,
     ManufacturerViewSet,
     ManufacturingCompaniesViewSet,
+    PatternViewSet,
     ProtocolViewSet,
     ProxyViewSet,
     QMSViewSet,
@@ -52,7 +53,7 @@ router.register(
     basename='manufacturing_company-list'
 )
 router.register(
-    'manufacturers',
+    r'manufacturers/(?P<applicant_id>\d+)',
     ManufacturerViewSet,
     basename='manufacturer-list'
 )
@@ -108,7 +109,8 @@ router.register(
     ProtocolViewSet,
     basename='protocol-list'
 )
-router.register('qms', QMSViewSet, basename='qms-list')
+router.register(r'qms/(?P<applicant_id>\d+)', QMSViewSet, basename='qms-list')
+router.register('patterns', PatternViewSet, basename='pattern-list')
 
 urlpatterns = [
     path('v1/', include(router.urls)),

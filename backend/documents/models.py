@@ -10,6 +10,7 @@ from django.db.models import (
     CharField,
     DateField,
     EmailField,
+    FileField,
     ForeignKey,
     ManyToManyField,
     Model,
@@ -1042,3 +1043,16 @@ class Work(Model):
         ordering = ['-id']
         verbose_name = 'Работа органа'
         verbose_name_plural = 'Работы органа'
+
+
+class Pattern(Model):
+    name = CharField(
+        max_length=CHAR_FIELD_MAX_SIZE,
+        verbose_name='Наименование формы',
+    )
+    date_issue = DateField(
+        'Дата начала использования'
+    )
+    file = FileField(
+        upload_to=f'patterns',
+    )

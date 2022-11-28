@@ -17,6 +17,7 @@ from documents.models import (
     Head,
     Manufacturer,
     ManufacturingCompanies,
+    Pattern,
     Protocol,
     Proxy,
     Reglament,
@@ -25,6 +26,9 @@ from documents.models import (
     Standard,
     TnVedKey,
     Work,
+)
+from rest_framework import (
+    serializers,
 )
 from rest_framework.fields import (
     CurrentUserDefault,
@@ -243,3 +247,10 @@ class ProtocolSerializer(ModelSerializer):
     class Meta:
         fields = '__all__'
         model = Protocol
+
+
+class PatternSerializer(ModelSerializer):
+
+    class Meta:
+        fields = '__all__'
+        model = Pattern
