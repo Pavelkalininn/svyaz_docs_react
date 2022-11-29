@@ -16,7 +16,7 @@ from documents.models import (
     Expert,
     Head,
     Manufacturer,
-    ManufacturingCompanies,
+    ManufacturingCompany,
     Pattern,
     Protocol,
     Proxy,
@@ -26,9 +26,6 @@ from documents.models import (
     Standard,
     TnVedKey,
     Work,
-)
-from rest_framework import (
-    serializers,
 )
 from rest_framework.fields import (
     CurrentUserDefault,
@@ -54,25 +51,55 @@ class AgreementSerializer(ModelSerializer):
         model = Agreement
 
 
-class ApplicantSerializer(ModelSerializer):
-
-    class Meta:
-        fields = '__all__'
-        model = Applicant
-
-
 class ApplicantInformationSerializer(ModelSerializer):
+    agreements = AgreementSerializer(many=True)
 
     class Meta:
-        fields = '__all__'
+        fields = (
+            'id',
+            'agreements',
+            'ogrn',
+            'inn',
+            'applicant_location',
+            'applicant_work_location',
+            'phone_num',
+            'e_mail',
+            'date_issue',
+            'date_expiry',
+            'applicant',
+            'owner'
+        )
         model = ApplicantInformation
 
 
-class ApplicationSerializer(ModelSerializer):
+class ProxySerializer(ModelSerializer):
+
+    class Meta:
+        fields = (
+            'id',
+            'name',
+            'date_issue',
+            'date_expiry',
+            'owner'
+        )
+        model = Proxy
+
+
+class SignatorySerializer(ModelSerializer):
+    proxies = ProxySerializer(many=True)
 
     class Meta:
         fields = '__all__'
-        model = Application
+        model = Signatory
+
+
+class ApplicantSerializer(ModelSerializer):
+    informations = ApplicantInformationSerializer(many=True)
+    signatories = SignatorySerializer(many=True)
+
+    class Meta:
+        fields = ('id', 'name', 'informations', 'signatories')
+        model = Applicant
 
 
 class CertificationBodySerializer(ModelSerializer):
@@ -113,15 +140,23 @@ class HeadSerializer(ModelSerializer):
 class ManufacturerSerializer(ModelSerializer):
 
     class Meta:
-        fields = '__all__'
+        fields = (
+            'id',
+            'name',
+            'location',
+            'work_location',
+            'country',
+            'qms',
+            'manufacturing_companies'
+        )
         model = Manufacturer
 
 
-class ManufacturingCompaniesSerializer(ModelSerializer):
+class ManufacturingCompanySerializer(ModelSerializer):
 
     class Meta:
         fields = '__all__'
-        model = ManufacturingCompanies
+        model = ManufacturingCompany
 
 
 class ApplicationUserSerializer(ModelSerializer):
@@ -129,6 +164,7 @@ class ApplicationUserSerializer(ModelSerializer):
 
     class Meta:
         fields = (
+            'id',
             'name',
             'certification_body',
             'application',
@@ -156,6 +192,7 @@ class ApplicationStaffSerializer(ModelSerializer):
 
     class Meta:
         fields = (
+            'id',
             'name',
             'certification_body',
             'application',
@@ -193,13 +230,6 @@ class ApplicationStaffSerializer(ModelSerializer):
         model = Application
 
 
-class ProxySerializer(ModelSerializer):
-
-    class Meta:
-        fields = '__all__'
-        model = Proxy
-
-
 class ReglamentSerializer(ModelSerializer):
 
     class Meta:
@@ -212,13 +242,6 @@ class SchemSerializer(ModelSerializer):
     class Meta:
         fields = '__all__'
         model = Schem
-
-
-class SignatorySerializer(ModelSerializer):
-
-    class Meta:
-        fields = '__all__'
-        model = Signatory
 
 
 class StandardSerializer(ModelSerializer):

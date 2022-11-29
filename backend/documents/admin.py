@@ -20,7 +20,7 @@ from .models import (
     Expert,
     Head,
     Manufacturer,
-    ManufacturingCompanies,
+    ManufacturingCompany,
     Pattern,
     Protocol,
     Proxy,
@@ -120,7 +120,7 @@ admin.site.register(Reglament)
 admin.site.register(Schem)
 admin.site.register(TnVedKey)
 admin.site.register(ConfirmationDecision)
-admin.site.register(ManufacturingCompanies)
+admin.site.register(ManufacturingCompany)
 admin.site.register(QMS)
 admin.site.register(Manufacturer)
 admin.site.register(Expert)

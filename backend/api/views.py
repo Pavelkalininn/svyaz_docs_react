@@ -1,3 +1,18 @@
+from api.filters import (
+    AgreementFilter,
+    ApplicantFilter,
+    ApplicationFilter,
+    ExpertFilter,
+    ManufacturerFilter,
+    ManufacturingCompanyFilter,
+    ProtocolFilter,
+    ProxyFilter,
+    QMSFilter,
+    SignatoryFilter,
+    StandardFilter,
+    TnVedKeyFilter,
+    WorkFilter,
+)
 from api.permissions import (
     CreateOrReadOnly,
     IsStaffOnly,
@@ -16,7 +31,7 @@ from api.serializers import (
     ExpertSerializer,
     HeadSerializer,
     ManufacturerSerializer,
-    ManufacturingCompaniesSerializer,
+    ManufacturingCompanySerializer,
     PatternSerializer,
     ProtocolSerializer,
     ProxySerializer,
@@ -31,6 +46,9 @@ from api.serializers import (
 from django.contrib.auth import (
     get_user_model,
 )
+from django_filters.rest_framework import (
+    DjangoFilterBackend,
+)
 from documents.models import (
     QMS,
     Agreement,
@@ -43,7 +61,7 @@ from documents.models import (
     Expert,
     Head,
     Manufacturer,
-    ManufacturingCompanies,
+    ManufacturingCompany,
     Pattern,
     Protocol,
     Proxy,
@@ -53,6 +71,9 @@ from documents.models import (
     Standard,
     TnVedKey,
     Work,
+)
+from rest_framework.generics import (
+    get_object_or_404,
 )
 from rest_framework.mixins import (
     CreateModelMixin,
@@ -75,15 +96,14 @@ class QMSViewSet(
 ):
     serializer_class = QMSSerializer
     permission_classes = (OwnerOnly,)
+    filter_backends = (DjangoFilterBackend,)
+    filterset_class = QMSFilter
+    filterset_fields = ('number',)
 
     def get_queryset(self):
         if self.request.user.is_staff:
-            return QMS.objects.filter(
-                manufacturer__owner__owner_applicants=self.kwargs.get(
-                    'applicant_id'
-                )
-            ).all()
-        return QMS.objects.filter(manufacturer__owner=self.request.user).all()
+            return QMS.objects.all()
+        return self.request.user.qms
 
     def perform_create(self, serializer):
         serializer.save(
@@ -99,16 +119,14 @@ class AgreementViewSet(
 ):
     serializer_class = AgreementSerializer
     permission_classes = (OwnerOnly,)
+    filter_backends = (DjangoFilterBackend,)
+    filterset_class = AgreementFilter
+    filterset_fields = ('number',)
 
     def get_queryset(self):
         if self.request.user.is_staff:
-            return Agreement.objects.filter(
-                applicant_information__applicant=self.kwargs.get(
-                    'applicant_id'
-                )
-            ).all()
-        return Agreement.objects.filter(
-            applicant_information__applicant__owner=self.request.user).all()
+            return Agreement.objects.all()
+        return self.request.user.agreements
 
     def perform_create(self, serializer):
         serializer.save(
@@ -124,13 +142,14 @@ class ApplicantViewSet(
 ):
     serializer_class = ApplicantSerializer
     permission_classes = (OwnerOnly,)
+    filter_backends = (DjangoFilterBackend,)
+    filterset_class = ApplicantFilter
+    filterset_fields = ('name',)
 
     def get_queryset(self):
         if self.request.user.is_staff:
-            return Applicant.objects.filter(
-                pk=self.kwargs.get('applicant_id')
-            ).all()
-        return Applicant.objects.filter(owner=self.request.user).all()
+            return Applicant.objects.all()
+        return self.request.user.owner_applicants
 
     def perform_create(self, serializer):
         serializer.save(
@@ -149,12 +168,8 @@ class ApplicantInformationViewSet(
 
     def get_queryset(self):
         if self.request.user.is_staff:
-            return ApplicantInformation.objects.filter(
-                applicant=self.kwargs.get('applicant_id')
-            ).all()
-        return ApplicantInformation.objects.filter(
-            owner=self.request.user
-        ).all()
+            return ApplicantInformation.objects.all()
+        return self.request.user.applicant_informations
 
     def perform_create(self, serializer):
         serializer.save(
@@ -166,6 +181,9 @@ class WorkViewSet(ModelViewSet):
     queryset = Work.objects.all()
     serializer_class = WorkSerializer
     permission_classes = (IsStaffOnly,)
+    filter_backends = (DjangoFilterBackend,)
+    filterset_class = WorkFilter
+    filterset_fields = ('name', 'number')
 
 
 class ProtocolViewSet(
@@ -176,13 +194,14 @@ class ProtocolViewSet(
 ):
     serializer_class = ProtocolSerializer
     permission_classes = (OwnerOnly,)
+    filter_backends = (DjangoFilterBackend,)
+    filterset_class = ProtocolFilter
+    filterset_fields = ('number', )
 
     def get_queryset(self):
         if self.request.user.is_staff:
             return Protocol.objects.all()
-        return Protocol.objects.filter(
-            owner=self.request.user
-        ).all()
+        return self.request.user.protocols
 
     def perform_create(self, serializer):
         serializer.save(
@@ -218,14 +237,8 @@ class ConfirmationDecisionViewSet(ModelViewSet):
 
     def get_queryset(self):
         if self.request.user.is_staff:
-            return ConfirmationDecision.objects.filter(
-                qms__manufacturer__owner__owner_applicants=self.kwargs.get(
-                    'applicant_id'
-                )
-            ).all()
-        return ConfirmationDecision.objects.filter(
-            owner=self.request.user
-        ).all()
+            return ConfirmationDecision.objects.all()
+        return self.request.user.confirmation_decisions
 
     def perform_create(self, serializer):
         serializer.save(
@@ -242,6 +255,9 @@ class ExpertViewSet(
     queryset = Expert.objects.all()
     serializer_class = ExpertSerializer
     permission_classes = (IsStaffOnly, )
+    filter_backends = (DjangoFilterBackend,)
+    filterset_class = ExpertFilter
+    filterset_fields = ('full_name',)
 
 
 class HeadViewSet(
@@ -263,17 +279,14 @@ class ManufacturerViewSet(
 ):
     serializer_class = ManufacturerSerializer
     permission_classes = (OwnerOnly, )
+    filter_backends = (DjangoFilterBackend,)
+    filterset_class = ManufacturerFilter
+    filterset_fields = ('search',)
 
     def get_queryset(self):
         if self.request.user.is_staff:
-            return Manufacturer.objects.filter(
-                owner__owner_applicants=self.kwargs.get(
-                    'applicant_id'
-                )
-            ).all()
-        return Manufacturer.objects.filter(
-            owner=self.request.user
-        ).all()
+            return Manufacturer.objects.all()
+        return self.request.user.manufacturers
 
     def perform_create(self, serializer):
         serializer.save(
@@ -281,25 +294,22 @@ class ManufacturerViewSet(
         )
 
 
-class ManufacturingCompaniesViewSet(
+class ManufacturingCompanyViewSet(
     ListModelMixin,
     RetrieveModelMixin,
     CreateModelMixin,
     GenericViewSet
 ):
-    serializer_class = ManufacturingCompaniesSerializer
+    serializer_class = ManufacturingCompanySerializer
     permission_classes = (OwnerOnly, )
+    filter_backends = (DjangoFilterBackend,)
+    filterset_class = ManufacturingCompanyFilter
+    filterset_fields = ('search',)
 
     def get_queryset(self):
         if self.request.user.is_staff:
-            return ManufacturingCompanies.objects.filter(
-                owner__owner_applicants=self.kwargs.get(
-                    'applicant_id'
-                )
-            ).all()
-        return ManufacturingCompanies.objects.filter(
-            owner=self.request.user
-        ).all()
+            return ManufacturingCompany.objects.all()
+        return self.request.user.manufacturing_companies
 
     def perform_create(self, serializer):
         serializer.save(
@@ -314,6 +324,9 @@ class ApplicationViewSet(
     GenericViewSet
 ):
     permission_classes = (OwnerOnly, )
+    filter_backends = (DjangoFilterBackend,)
+    filterset_class = ApplicationFilter
+    filterset_fields = ('search',)
 
     def get_serializer_class(self):
         if self.request.user.is_staff:
@@ -322,14 +335,8 @@ class ApplicationViewSet(
 
     def get_queryset(self):
         if self.request.user.is_staff:
-            return Application.objects.filter(
-                applicant=self.kwargs.get(
-                    'applicant_id'
-                )
-            ).all()
-        return Application.objects.filter(
-            owner=self.request.user
-        ).all()
+            return Application.objects.all()
+        return self.request.user.applications
 
     def perform_create(self, serializer):
         serializer.save(
@@ -345,17 +352,14 @@ class ProxyViewSet(
 ):
     serializer_class = ProxySerializer
     permission_classes = (OwnerOnly, )
+    filter_backends = (DjangoFilterBackend,)
+    filterset_class = ProxyFilter
+    filterset_fields = ('name',)
 
     def get_queryset(self):
         if self.request.user.is_staff:
-            return Proxy.objects.filter(
-                signatory__applicant=self.kwargs.get(
-                    'applicant_id'
-                )
-            ).all()
-        return Proxy.objects.filter(
-            owner=self.request.user
-        ).all()
+            return Proxy.objects.all()
+        return self.request.user.proxies
 
     def perform_create(self, serializer):
         serializer.save(
@@ -393,17 +397,14 @@ class SignatoryViewSet(
 ):
     serializer_class = SignatorySerializer
     permission_classes = (OwnerOnly, )
+    filter_backends = (DjangoFilterBackend,)
+    filterset_class = SignatoryFilter
+    filterset_fields = ('full_name',)
 
     def get_queryset(self):
         if self.request.user.is_staff:
-            return Signatory.objects.filter(
-                applicant=self.kwargs.get(
-                    'applicant_id'
-                )
-            ).all()
-        return Signatory.objects.filter(
-            owner=self.request.user
-        ).all()
+            return Signatory.objects.all()
+        return self.request.user.signatories
 
     def perform_create(self, serializer):
         serializer.save(
@@ -420,6 +421,9 @@ class StandardViewSet(
     queryset = Standard.objects.all()
     serializer_class = StandardSerializer
     permission_classes = (CreateOrReadOnly, )
+    filter_backends = (DjangoFilterBackend,)
+    filterset_class = StandardFilter
+    filterset_fields = ('search',)
 
 
 class TnVedKeyViewSet(
@@ -431,6 +435,9 @@ class TnVedKeyViewSet(
     queryset = TnVedKey.objects.all()
     serializer_class = TnVedKeySerializer
     permission_classes = (CreateOrReadOnly, )
+    filter_backends = (DjangoFilterBackend,)
+    filterset_class = TnVedKeyFilter
+    filterset_fields = ('name',)
 
 
 class PatternViewSet(ModelViewSet):
