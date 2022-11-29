@@ -9,7 +9,7 @@ from api.views import (
     ExpertViewSet,
     HeadViewSet,
     ManufacturerViewSet,
-    ManufacturingCompaniesViewSet,
+    ManufacturingCompanyViewSet,
     PatternViewSet,
     ProtocolViewSet,
     ProxyViewSet,
@@ -40,32 +40,32 @@ router.register('experts', ExpertViewSet, basename='expert-list')
 router.register('works', WorkViewSet, basename='work-list')
 
 router.register(
-    r'signatories/(?P<applicant_id>\d+)',
+    r'signatories',
     SignatoryViewSet,
     basename='signatory-list'
 )
 router.register(
-    r'proxies/(?P<applicant_id>\d+)',
+    r'proxies',
     ProxyViewSet,
     basename='proxy-list'
 )
 router.register(
-    r'applications/(?P<applicant_id>\d+)',
+    r'applications',
     ApplicationViewSet,
     basename='application-list'
 )
 router.register(
-    r'manufacturing_companies/(?P<applicant_id>\d+)',
-    ManufacturingCompaniesViewSet,
+    r'manufacturing_companies',
+    ManufacturingCompanyViewSet,
     basename='manufacturing_company-list'
 )
 router.register(
-    r'manufacturers/(?P<applicant_id>\d+)',
+    r'manufacturers',
     ManufacturerViewSet,
     basename='manufacturer-list'
 )
 router.register(
-    r'confirmation_decisions/(?P<applicant_id>\d+)',
+    r'confirmation_decisions',
     ConfirmationDecisionViewSet,
     basename='confirmation_decision-list'
 )
@@ -80,22 +80,22 @@ router.register(
     basename='certification_body-list'
 )
 router.register(
-    r'applicant_information/(?P<applicant_id>\d+)',
+    r'applicant_informations',
     ApplicantInformationViewSet,
     basename='applicant_information-list'
 )
 router.register('applicants', ApplicantViewSet, basename='applicant-list')
 router.register(
-    r'agreements/(?P<applicant_id>\d+)',
+    r'agreements',
     AgreementViewSet,
     basename='agreement-list'
 )
 router.register(
-    r'protocols/(?P<applicant_id>\d+)',
+    r'protocols',
     ProtocolViewSet,
     basename='protocol-list'
 )
-router.register(r'qms/(?P<applicant_id>\d+)', QMSViewSet, basename='qms-list')
+router.register(r'qms', QMSViewSet, basename='qms-list')
 router.register('patterns', PatternViewSet, basename='pattern-list')
 
 urlpatterns = [

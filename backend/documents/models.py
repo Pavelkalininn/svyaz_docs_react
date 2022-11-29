@@ -429,7 +429,8 @@ class Manufacturer(Model):
         constraints = [
             UniqueConstraint(
                 fields=['name', 'location', 'work_location'],
-                name='unique_manufacturer'),
+                name='unique_manufacturer'
+            ),
         ]
 
 
@@ -508,7 +509,7 @@ class ConfirmationDecision(Model):
     )
     qms = ForeignKey(
         QMS,
-        related_name='confirmation_decision',
+        related_name='confirmation_decisions',
         verbose_name='Сертификат СМК',
         on_delete=CASCADE
     )
@@ -522,7 +523,7 @@ class ConfirmationDecision(Model):
         verbose_name_plural = 'Решения о подтверждении СМК'
 
 
-class ManufacturingCompanies(Model):
+class ManufacturingCompany(Model):
     name = CharField(
         max_length=CHAR_FIELD_MAX_SIZE,
         verbose_name='Наименование производственной площадки'
@@ -782,7 +783,7 @@ class Application(Model):
         on_delete=CASCADE
     )
     manufacturing_companies = ManyToManyField(
-        ManufacturingCompanies,
+        ManufacturingCompany,
         related_name='applications',
         verbose_name='Производственные площадки',
     )
@@ -1054,5 +1055,11 @@ class Pattern(Model):
         'Дата начала использования'
     )
     file = FileField(
+        unique=True,
         upload_to=f'patterns',
     )
+
+    class Meta:
+        ordering = ['name']
+        verbose_name = 'Форма документа'
+        verbose_name_plural = 'Формы документов'
