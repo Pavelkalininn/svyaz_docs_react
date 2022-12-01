@@ -96,7 +96,8 @@ class ManufacturerFilter(django_filters.FilterSet):
         model = Manufacturer
         fields = ('search', )
 
-    def search_filter(self, queryset, name, value):
+    @staticmethod
+    def search_filter(queryset, name, value):
         return queryset.filter(
             Q(name__icontains=value)
             or Q(location__icontains=value)
@@ -111,7 +112,8 @@ class ManufacturingCompanyFilter(django_filters.FilterSet):
         model = ManufacturingCompany
         fields = ('search', )
 
-    def search_filter(self, queryset, name, value):
+    @staticmethod
+    def search_filter(queryset, name, value):
         return queryset.filter(
             Q(name__icontains=value)
             or Q(location__icontains=value)
@@ -126,7 +128,8 @@ class ApplicationFilter(django_filters.FilterSet):
         model = Application
         fields = ('search', )
 
-    def search_filter(self, queryset, name, value):
+    @staticmethod
+    def search_filter(queryset, name, value):
         return queryset.filter(
             Q(prod_name__icontains=value)
             or Q(standard__name__icontains=value)
@@ -162,7 +165,8 @@ class StandardFilter(django_filters.FilterSet):
         model = Standard
         fields = ('search', )
 
-    def search_filter(self, queryset, name, value):
+    @staticmethod
+    def search_filter(queryset, name, value):
         return queryset.filter(
             Q(name__icontains=value)
             or Q(voluntary_docs__icontains=value)
@@ -179,4 +183,3 @@ class TnVedKeyFilter(django_filters.FilterSet):
     class Meta:
         model = TnVedKey
         fields = ('name', )
-

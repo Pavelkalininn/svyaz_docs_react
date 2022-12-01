@@ -1,9 +1,6 @@
 from django.contrib.auth import (
     get_user_model,
 )
-from djoser.serializers import (
-    UserSerializer,
-)
 from documents.models import (
     QMS,
     Agreement,
@@ -26,9 +23,6 @@ from documents.models import (
     Standard,
     TnVedKey,
     Work,
-)
-from rest_framework.fields import (
-    CurrentUserDefault,
 )
 from rest_framework.serializers import (
     ModelSerializer,
@@ -93,13 +87,19 @@ class SignatorySerializer(ModelSerializer):
         model = Signatory
 
 
-class ApplicantSerializer(ModelSerializer):
+class ApplicantCreateSerializer(ModelSerializer):
+
+    class Meta:
+        fields = ('id', 'name', 'informations', 'signatories', 'owner')
+        model = Applicant
+
+
+class ApplicantReadSerializer(ApplicantCreateSerializer):
     informations = ApplicantInformationSerializer(many=True)
     signatories = SignatorySerializer(many=True)
 
-    class Meta:
-        fields = ('id', 'name', 'informations', 'signatories')
-        model = Applicant
+    class Meta(ApplicantCreateSerializer.Meta):
+        ...
 
 
 class CertificationBodySerializer(ModelSerializer):
@@ -160,14 +160,11 @@ class ManufacturingCompanySerializer(ModelSerializer):
 
 
 class ApplicationUserSerializer(ModelSerializer):
-    owner = UserSerializer(default=CurrentUserDefault(), read_only=True)
 
     class Meta:
         fields = (
             'id',
-            'name',
             'certification_body',
-            'application',
             'applicant',
             'signatory',
             'standard',
@@ -193,11 +190,8 @@ class ApplicationStaffSerializer(ModelSerializer):
     class Meta:
         fields = (
             'id',
-            'name',
-            'certification_body',
-            'application',
-            'path_to_folder',
             'applicant',
+            'certification_body',
             'signatory',
             'standard',
             'GTIN_key',
@@ -209,22 +203,10 @@ class ApplicationStaffSerializer(ModelSerializer):
             'tn_ved_keys',
             'manufacturer',
             'manufacturing_companies',
+            'protocols',
             'qms',
             'docs_with_application',
             'additional_information',
-            'application_decision_date',
-            'first_expert',
-            'second_expert',
-            'certificate_expert',
-            'product_evaluation_work_plan_date',
-            'certification_body_head',
-            'expert_opinion_date',
-            'release_decision_date',
-            'certificate_issue_date',
-            'certificate_expiry_date',
-            'certificate_number',
-            'certificate_application_1_form_number',
-            'certificate_application_2_form_number',
             'owner',
         )
         model = Application
