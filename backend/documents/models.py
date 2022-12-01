@@ -65,7 +65,7 @@ class User(AbstractUser):
 
     class Meta:
         ordering = ('-id',)
-        verbose_name = 'Пользователь'
+        verbose_name = 'пользователь'
         verbose_name_plural = 'Пользователи'
 
 
@@ -87,7 +87,7 @@ class Applicant(Model):
 
     class Meta:
         ordering = ['name']
-        verbose_name = 'Заявитель'
+        verbose_name = 'заявитель'
         verbose_name_plural = 'Заявители'
 
 
@@ -133,7 +133,7 @@ class Signatory(Model):
 
     class Meta:
         ordering = ['short_name']
-        verbose_name = 'Подписант'
+        verbose_name = 'подписант'
         verbose_name_plural = 'Подписанты'
         constraints = [
             UniqueConstraint(
@@ -173,7 +173,7 @@ class Proxy(Model):
 
     class Meta:
         ordering = ['-date_issue']
-        verbose_name = 'Доверенность'
+        verbose_name = 'доверенность'
         verbose_name_plural = 'Доверенности'
 
 
@@ -236,7 +236,7 @@ class ApplicantInformation(Model):
 
     class Meta:
         ordering = ['-date_issue']
-        verbose_name = 'Карточка организации'
+        verbose_name = 'карточка организации'
         verbose_name_plural = 'Карточки организации'
         constraints = [
             UniqueConstraint(
@@ -277,7 +277,7 @@ class Agreement(Model):
 
     class Meta:
         ordering = ['-date_issue']
-        verbose_name = 'Соглашение'
+        verbose_name = 'соглашение'
         verbose_name_plural = 'Соглашения'
 
 
@@ -325,7 +325,7 @@ class Standard(Model):
 
     class Meta:
         ordering = ['name']
-        verbose_name = 'Стандарт'
+        verbose_name = 'стандарт'
         verbose_name_plural = 'Стандарты'
 
 
@@ -341,7 +341,7 @@ class CertificationObject(Model):
 
     class Meta:
         ordering = ['name']
-        verbose_name = 'Объект сертификации'
+        verbose_name = 'объект сертификации'
         verbose_name_plural = 'Объекты сертификации'
 
 
@@ -357,7 +357,7 @@ class Reglament(Model):
 
     class Meta:
         ordering = ['name']
-        verbose_name = 'Регламент'
+        verbose_name = 'регламент'
         verbose_name_plural = 'Регламенты'
 
 
@@ -372,7 +372,7 @@ class Schem(Model):
 
     class Meta:
         ordering = ['name']
-        verbose_name = 'Схема сертификации'
+        verbose_name = 'схема сертификации'
         verbose_name_plural = 'Схемы сертификации'
 
 
@@ -391,7 +391,7 @@ class TnVedKey(Model):
 
     class Meta:
         ordering = ['name']
-        verbose_name = 'Код ТН ВЭД ЕАЭС'
+        verbose_name = 'код ТН ВЭД ЕАЭС'
         verbose_name_plural = 'Коды ТН ВЭД ЕАЭС'
 
 
@@ -424,7 +424,7 @@ class Manufacturer(Model):
 
     class Meta:
         ordering = ['name']
-        verbose_name = 'Изготовитель'
+        verbose_name = 'изготовитель'
         verbose_name_plural = 'Изготовители'
         constraints = [
             UniqueConstraint(
@@ -483,7 +483,7 @@ class QMS(Model):
 
     class Meta:
         ordering = ['number']
-        verbose_name = 'Сертификат СМК'
+        verbose_name = 'сертификат СМК'
         verbose_name_plural = 'Сертификаты СМК'
 
 
@@ -519,7 +519,7 @@ class ConfirmationDecision(Model):
 
     class Meta:
         ordering = ['number']
-        verbose_name = 'Решение о подтверждении СМК'
+        verbose_name = 'решение о подтверждении СМК'
         verbose_name_plural = 'Решения о подтверждении СМК'
 
 
@@ -554,7 +554,7 @@ class ManufacturingCompany(Model):
 
     class Meta:
         ordering = ['name']
-        verbose_name = 'Производственная площадка'
+        verbose_name = 'производственная площадка'
         verbose_name_plural = 'Производственные площадки'
         constraints = [
             UniqueConstraint(
@@ -582,7 +582,7 @@ class CertificationBody(Model):
 
     class Meta:
         ordering = ['name']
-        verbose_name = 'Орган по сертификации продукции'
+        verbose_name = 'орган по сертификации продукции'
         verbose_name_plural = 'Органы по сертфикации продукции'
 
 
@@ -618,7 +618,7 @@ class Expert(Model):
 
     class Meta:
         ordering = ['name']
-        verbose_name = 'Эксперт'
+        verbose_name = 'эксперт'
         verbose_name_plural = 'Эксперты'
 
 
@@ -654,7 +654,7 @@ class Head(Model):
 
     class Meta:
         ordering = ['name']
-        verbose_name = 'Руководитель органа'
+        verbose_name = 'руководитель органа'
         verbose_name_plural = 'Руководители органов'
 
 
@@ -673,7 +673,7 @@ class Protocol(Model):
     body_name = CharField(
         max_length=CHAR_FIELD_MAX_SIZE,
         verbose_name=(
-            'Полное наименование лаборатории в родительном падеже'
+            'Полное наименование лаборатории в творительном падеже (кем?)'
             ' (испытательной лабораторией ...)'
         )
     )
@@ -700,7 +700,7 @@ class Protocol(Model):
 
     class Meta:
         ordering = ['number']
-        verbose_name = 'Протокол'
+        verbose_name = 'протокол'
         verbose_name_plural = 'Протоколы'
         constraints = [
             UniqueConstraint(
@@ -814,11 +814,11 @@ class Application(Model):
     )
 
     def __str__(self):
-        return f'{self.applicant} \n {self.standard} \n {self.prod_name}'
+        return f'{self.applicant} {self.standard} {self.prod_name}'
 
     class Meta:
         ordering = ['-id']
-        verbose_name = 'Заявка'
+        verbose_name = 'заявка'
         verbose_name_plural = 'Заявки'
 
 
@@ -846,11 +846,6 @@ class Work(Model):
     )
     date = DateField(
         verbose_name='Дата заявки'
-    )
-    application_decision_date = DateField(
-        null=True,
-        blank=True,
-        verbose_name='Дата решения по заявке'
     )
     application_analyze_expert = ForeignKey(
         Expert,
@@ -916,6 +911,51 @@ class Work(Model):
         related_name='certificate_head_works',
         verbose_name='Руководитель в сертификате',
         on_delete=CASCADE
+    )
+    conclusion_application_analyze_date = DateField(
+        null=True,
+        blank=True,
+        verbose_name='Дата заключения анализа заявки'
+    )
+    application_decision_date = DateField(
+        null=True,
+        blank=True,
+        verbose_name='Дата решения по заявке'
+    )
+    evaluation_planned_date = DateField(
+        null=True,
+        blank=True,
+        verbose_name='Запланированный срок оценивания'
+    )
+    evaluation_analyze_planned_date = DateField(
+        null=True,
+        blank=True,
+        verbose_name='Запланированный срок анализа результатов оценивания'
+    )
+    preliminary_analysis_production_protocol_date = DateField(
+        null=True,
+        blank=True,
+        verbose_name='Дата протокола предварительного анализа производства'
+    )
+    act_analysis_production_date = DateField(
+        null=True,
+        blank=True,
+        verbose_name='Дата акта анализа состояния производства'
+    )
+    analysis_production_duration_till_date = DateField(
+        null=True,
+        blank=True,
+        verbose_name='Срок проведения анализа сотсояния производства (По)'
+    )
+    conclusion_of_conformity_assessment_date = DateField(
+        null=True,
+        blank=True,
+        verbose_name='Дата заключения анализа'
+    )
+    analysis_production_registry_notes = DateField(
+        null=True,
+        blank=True,
+        verbose_name='Примечания по регистрации анализа состояния продукции'
     )
 
     product_evaluation_work_plan_date = DateField(
@@ -996,53 +1036,13 @@ class Work(Model):
         Protocol,
         verbose_name='Протоколы испытаний полученные в ходе сертификации'
     )
-    conclusion_application_analyze_date = DateField(
-        null=True,
-        blank=True,
-        verbose_name='Дата заключения анализа заявки'
-    )
-    evaluation_planned_date = DateField(
-        null=True,
-        blank=True,
-        verbose_name='Запланированный срок оценивания'
-    )
-    evaluation_analyze_planned_date = DateField(
-        null=True,
-        blank=True,
-        verbose_name='Запланированный срок анализа результатов оценивания'
-    )
-    preliminary_analysis_production_protocol_date = DateField(
-        null=True,
-        blank=True,
-        verbose_name='Дата протокола предварительного анализа производства'
-    )
-    act_analysis_production_date = DateField(
-        null=True,
-        blank=True,
-        verbose_name='Дата акта анализа состояния производства'
-    )
-    analysis_production_duration_till_date = DateField(
-        null=True,
-        blank=True,
-        verbose_name='Срок проведения анализа сотсояния производства (По)'
-    )
-    conclusion_of_conformity_assessment_date = DateField(
-        null=True,
-        blank=True,
-        verbose_name='Дата заключения анализа'
-    )
-    analysis_production_registry_notes = DateField(
-        null=True,
-        blank=True,
-        verbose_name='Примечания по регистрации анализа состояния продукции'
-    )
 
     def __str__(self):
         return self.name
 
     class Meta:
         ordering = ['-id']
-        verbose_name = 'Работа органа'
+        verbose_name = 'работа органа'
         verbose_name_plural = 'Работы органа'
 
 
@@ -1056,10 +1056,13 @@ class Pattern(Model):
     )
     file = FileField(
         unique=True,
-        upload_to=f'patterns',
+        upload_to='patterns',
     )
 
+    def __str__(self):
+        return f'{self.name} от {self.date_issue}'
+
     class Meta:
-        ordering = ['name']
-        verbose_name = 'Форма документа'
+        ordering = ['name', '-date_issue']
+        verbose_name = 'форма документа'
         verbose_name_plural = 'Формы документов'
