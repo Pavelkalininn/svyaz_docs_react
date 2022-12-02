@@ -1,5 +1,6 @@
 # -*- coding: UTF-8 -*-
 from api.const import (
+    ACT_ANALYSIS_PRODUCTION,
     CERTIFICATION_DECISION,
     CONCLUSION_APPLICATION_ANALYZE,
     PRELIMINARY_ANALYSIS_PRODUCTION_PROTOCOL,
@@ -242,6 +243,14 @@ class WorkViewSet(ModelViewSet):
     )
     def download_preliminary_analysis_production_protocol(self, request, pk):
         return document_creator(PRELIMINARY_ANALYSIS_PRODUCTION_PROTOCOL, pk)
+
+    @action(
+        methods=['get'],
+        permission_classes=(IsStaffOnly,),
+        detail=True,
+    )
+    def download_act_analysis_production(self, request, pk):
+        return document_creator(ACT_ANALYSIS_PRODUCTION, pk)
 
 
 class ProtocolViewSet(

@@ -1,3 +1,6 @@
+from api.const import (
+    PATTERNS,
+)
 from django.contrib.auth.models import (
     AbstractUser,
 )
@@ -1048,8 +1051,9 @@ class Work(Model):
 
 class Pattern(Model):
     name = CharField(
+        'Наименование формы',
         max_length=CHAR_FIELD_MAX_SIZE,
-        verbose_name='Наименование формы',
+        choices=PATTERNS,
     )
     date_issue = DateField(
         'Дата начала использования'
