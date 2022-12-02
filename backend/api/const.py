@@ -25,3 +25,27 @@ PRODUCT_EVALUATION_WORK_PLAN = 'План работ по оценке проду
 PRELIMINARY_ANALYSIS_PRODUCTION_PROTOCOL = (
     'Протокол предварительного анализа производства'
 )
+ACT_ANALYSIS_PRODUCTION = 'Акт анализа состояния производства'
+
+PATTERNS = (
+    (CONCLUSION_APPLICATION_ANALYZE, CONCLUSION_APPLICATION_ANALYZE),
+    (CERTIFICATION_DECISION, CERTIFICATION_DECISION),
+    (PRODUCT_EVALUATION_WORK_PLAN, PRODUCT_EVALUATION_WORK_PLAN),
+    (
+        PRELIMINARY_ANALYSIS_PRODUCTION_PROTOCOL,
+        PRELIMINARY_ANALYSIS_PRODUCTION_PROTOCOL
+    ),
+
+)
+MANUFACTURER_LOCATION_IF_EXACT_WORK_LOCATION = (
+    '. Место нахождения и адрес места осуществления деятельности по '
+    'изготовлению продукции: {location}.'
+)
+MANUFACTURER_LOCATION_AND_WORK_LOCATION = (
+    '. Место нахождения: {location}. Адрес места осуществления деятельности'
+    ' по изготовлению продукции: {work_location}.'
+)
+MANUFACTURING_COMPANIES_LOCATION = '. Место нахождения: {location}'
+MANUFACTURING_COMPANIES_WORK_LOCATION = (
+    '. Адрес места осуществления деятельности: {work_location}'
+)
