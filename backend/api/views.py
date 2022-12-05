@@ -4,7 +4,7 @@ from api.const import (
     CERTIFICATION_DECISION,
     CONCLUSION_APPLICATION_ANALYZE,
     PRELIMINARY_ANALYSIS_PRODUCTION_PROTOCOL,
-    PRODUCT_EVALUATION_WORK_PLAN,
+    PRODUCT_EVALUATION_WORK_PLAN, EXPERT_CONCLUSION,
 )
 from api.filters import (
     AgreementFilter,
@@ -251,6 +251,14 @@ class WorkViewSet(ModelViewSet):
     )
     def download_act_analysis_production(self, request, pk):
         return document_creator(ACT_ANALYSIS_PRODUCTION, pk)
+
+    @action(
+        methods=['get'],
+        permission_classes=(IsStaffOnly,),
+        detail=True,
+    )
+    def download_expert_conclusion(self, request, pk):
+        return document_creator(EXPERT_CONCLUSION, pk)
 
 
 class ProtocolViewSet(

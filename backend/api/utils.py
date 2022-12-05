@@ -7,11 +7,15 @@ from wsgiref.util import (
 )
 
 import docx
+from django.db.models import Count, Q
+
 from api.const import (
-    TEMP_FILE_NAME,
+    TEMP_FILE_NAME, PROTOCOL_FORM_FINAL_PLURAL, PROTOCOL_FORM_FINAL,
+    PROTOCOL_DATE_NUMBER_FORM, PROTOCOL_FORM_START, PROTOCOL_FORM_START_PLURAL,
+    PROTOCOL_ORDER_FIELD_NAME,
 )
 from api.document_filler import (
-    CHANGES,
+    CHANGES, date_format,
 )
 from django.http import (
     HttpResponse,
@@ -21,7 +25,7 @@ from django.utils.encoding import (
 )
 from documents.models import (
     Pattern,
-    Work,
+    Work, Protocol,
 )
 from docx import (
     Document,
