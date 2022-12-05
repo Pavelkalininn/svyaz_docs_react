@@ -89,7 +89,7 @@ class Applicant(Model):
         return self.name
 
     class Meta:
-        ordering = ['name']
+        ordering = ('name', )
         verbose_name = 'заявитель'
         verbose_name_plural = 'Заявители'
 
@@ -135,14 +135,14 @@ class Signatory(Model):
         return self.short_name
 
     class Meta:
-        ordering = ['short_name']
+        ordering = ('short_name', )
         verbose_name = 'подписант'
         verbose_name_plural = 'Подписанты'
-        constraints = [
+        constraints = (
             UniqueConstraint(
-                fields=['short_name', 'position'],
+                fields=('short_name', 'position'),
                 name='unique_signatory'),
-        ]
+        )
 
 
 class Proxy(Model):
@@ -175,7 +175,7 @@ class Proxy(Model):
         return self.name
 
     class Meta:
-        ordering = ['-date_issue']
+        ordering = ('-date_issue', )
         verbose_name = 'доверенность'
         verbose_name_plural = 'Доверенности'
 
@@ -238,14 +238,14 @@ class ApplicantInformation(Model):
         return self.applicant_location
 
     class Meta:
-        ordering = ['-date_issue']
+        ordering = ('-date_issue', )
         verbose_name = 'карточка организации'
         verbose_name_plural = 'Карточки организации'
-        constraints = [
+        constraints = (
             UniqueConstraint(
-                fields=['ogrn', 'date_issue'],
+                fields=('ogrn', 'date_issue'),
                 name='unique_applicant_information'),
-        ]
+        )
 
 
 class Agreement(Model):
@@ -279,7 +279,7 @@ class Agreement(Model):
         return self.number
 
     class Meta:
-        ordering = ['-date_issue']
+        ordering = ('-date_issue', )
         verbose_name = 'соглашение'
         verbose_name_plural = 'Соглашения'
 
@@ -327,7 +327,7 @@ class Standard(Model):
         return self.name
 
     class Meta:
-        ordering = ['name']
+        ordering = ('name', )
         verbose_name = 'стандарт'
         verbose_name_plural = 'Стандарты'
 
@@ -343,7 +343,7 @@ class CertificationObject(Model):
         return self.name
 
     class Meta:
-        ordering = ['name']
+        ordering = ('name', )
         verbose_name = 'объект сертификации'
         verbose_name_plural = 'Объекты сертификации'
 
@@ -359,7 +359,7 @@ class Reglament(Model):
         return self.name
 
     class Meta:
-        ordering = ['name']
+        ordering = ('name', )
         verbose_name = 'регламент'
         verbose_name_plural = 'Регламенты'
 
@@ -374,7 +374,7 @@ class Schem(Model):
         return self.name
 
     class Meta:
-        ordering = ['name']
+        ordering = ('name', )
         verbose_name = 'схема сертификации'
         verbose_name_plural = 'Схемы сертификации'
 
@@ -393,7 +393,7 @@ class TnVedKey(Model):
         return str(self.name)
 
     class Meta:
-        ordering = ['name']
+        ordering = ('name', )
         verbose_name = 'код ТН ВЭД ЕАЭС'
         verbose_name_plural = 'Коды ТН ВЭД ЕАЭС'
 
@@ -426,15 +426,15 @@ class Manufacturer(Model):
         return self.name
 
     class Meta:
-        ordering = ['name']
+        ordering = ('name', )
         verbose_name = 'изготовитель'
         verbose_name_plural = 'Изготовители'
-        constraints = [
+        constraints = (
             UniqueConstraint(
-                fields=['name', 'location', 'work_location'],
+                fields=('name', 'location', 'work_location'),
                 name='unique_manufacturer'
             ),
-        ]
+        )
 
 
 class QMS(Model):
@@ -485,7 +485,7 @@ class QMS(Model):
         return self.number
 
     class Meta:
-        ordering = ['number']
+        ordering = ('number', )
         verbose_name = 'сертификат СМК'
         verbose_name_plural = 'Сертификаты СМК'
 
@@ -521,7 +521,7 @@ class ConfirmationDecision(Model):
         return self.number
 
     class Meta:
-        ordering = ['number']
+        ordering = ('number', )
         verbose_name = 'решение о подтверждении СМК'
         verbose_name_plural = 'Решения о подтверждении СМК'
 
@@ -556,14 +556,14 @@ class ManufacturingCompany(Model):
         return self.name
 
     class Meta:
-        ordering = ['name']
+        ordering = ('name', )
         verbose_name = 'производственная площадка'
         verbose_name_plural = 'Производственные площадки'
-        constraints = [
+        constraints = (
             UniqueConstraint(
-                fields=['name', 'location', 'work_location'],
+                fields=('name', 'location', 'work_location'),
                 name='unique_manufacturing_companies'),
-        ]
+        )
 
 
 class CertificationBody(Model):
@@ -584,7 +584,7 @@ class CertificationBody(Model):
         return self.name
 
     class Meta:
-        ordering = ['name']
+        ordering = ('name', )
         verbose_name = 'орган по сертификации продукции'
         verbose_name_plural = 'Органы по сертфикации продукции'
 
@@ -620,7 +620,7 @@ class Expert(Model):
         return self.name
 
     class Meta:
-        ordering = ['name']
+        ordering = ('name', )
         verbose_name = 'эксперт'
         verbose_name_plural = 'Эксперты'
 
@@ -656,7 +656,7 @@ class Head(Model):
         return self.name
 
     class Meta:
-        ordering = ['name']
+        ordering = ('name', )
         verbose_name = 'руководитель органа'
         verbose_name_plural = 'Руководители органов'
 
@@ -702,14 +702,14 @@ class Protocol(Model):
         return f'{self.number} от {self.date}'
 
     class Meta:
-        ordering = ['number']
+        ordering = ('body_certificate', 'number')
         verbose_name = 'протокол'
         verbose_name_plural = 'Протоколы'
-        constraints = [
+        constraints = (
             UniqueConstraint(
-                fields=['number', 'owner'],
+                fields=('number', 'owner'),
                 name='unique_applicant_protocol'),
-        ]
+        )
 
 
 class Application(Model):
@@ -792,6 +792,7 @@ class Application(Model):
     )
     protocols = ManyToManyField(
         Protocol,
+        related_name='applications',
         verbose_name='Протоколы испытаний приложенные к заявке'
     )
     qms = ForeignKey(
@@ -820,7 +821,7 @@ class Application(Model):
         return f'{self.applicant} {self.standard} {self.prod_name}'
 
     class Meta:
-        ordering = ['-id']
+        ordering = ('-id', )
         verbose_name = 'заявка'
         verbose_name_plural = 'Заявки'
 
@@ -979,12 +980,12 @@ class Work(Model):
     certificate_issue_date = DateField(
         null=True,
         blank=True,
-        verbose_name='Дата заключения эксперта'
+        verbose_name='Дата выпуска сертификата'
     )
     certificate_expiry_date = DateField(
         null=True,
         blank=True,
-        verbose_name='Дата выдачи сертификата'
+        verbose_name='Дата окончания действия сертификата'
     )
     certificate_number = CharField(
         null=True,
@@ -1037,6 +1038,7 @@ class Work(Model):
     )
     protocols = ManyToManyField(
         Protocol,
+        related_name='works',
         verbose_name='Протоколы испытаний полученные в ходе сертификации'
     )
 
@@ -1044,7 +1046,7 @@ class Work(Model):
         return self.name
 
     class Meta:
-        ordering = ['-id']
+        ordering = ('-id', )
         verbose_name = 'работа органа'
         verbose_name_plural = 'Работы органа'
 
@@ -1067,6 +1069,6 @@ class Pattern(Model):
         return f'{self.name} от {self.date_issue}'
 
     class Meta:
-        ordering = ['name', '-date_issue']
+        ordering = ('name', '-date_issue')
         verbose_name = 'форма документа'
         verbose_name_plural = 'Формы документов'

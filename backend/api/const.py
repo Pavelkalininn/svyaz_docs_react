@@ -26,6 +26,7 @@ PRELIMINARY_ANALYSIS_PRODUCTION_PROTOCOL = (
     'Протокол предварительного анализа производства'
 )
 ACT_ANALYSIS_PRODUCTION = 'Акт анализа состояния производства'
+EXPERT_CONCLUSION = 'Заключение эксперта'
 
 PATTERNS = (
     (CONCLUSION_APPLICATION_ANALYZE, CONCLUSION_APPLICATION_ANALYZE),
@@ -35,6 +36,7 @@ PATTERNS = (
         PRELIMINARY_ANALYSIS_PRODUCTION_PROTOCOL,
         PRELIMINARY_ANALYSIS_PRODUCTION_PROTOCOL
     ),
+    (EXPERT_CONCLUSION, EXPERT_CONCLUSION)
 
 )
 MANUFACTURER_LOCATION_IF_EXACT_WORK_LOCATION = (
@@ -49,3 +51,19 @@ MANUFACTURING_COMPANIES_LOCATION = '. Место нахождения: {location
 MANUFACTURING_COMPANIES_WORK_LOCATION = (
     '. Адрес места осуществления деятельности: {work_location}'
 )
+PROTOCOL_FORM_START = 'Протокола испытаний №'
+PROTOCOL_FORM_START_PLURAL = 'Протоколов испытаний №№'
+PROTOCOL_DATE_NUMBER_FORM = '{number} от {date}г.'
+PROTOCOL_FORM_FINAL = (
+    'выданного {body_name}, '
+    'регистрационный номер аттестата аккредитации {body_certificate}. '
+)
+PROTOCOL_FORM_FINAL_PLURAL = (
+    'выданных {body_name}, '
+    'регистрационный номер аттестата аккредитации {body_certificate}. '
+)
+PROTOCOL_ORDER_FIELD_NAME = 'body_certificate'
+
+ANALYSIS_ACT_FORM = (
+        "\nакта анализа состояния производства № {number} от {date}."
+    )
