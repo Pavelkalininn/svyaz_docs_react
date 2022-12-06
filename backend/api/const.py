@@ -1,44 +1,51 @@
 # -*- coding: UTF-8 -*-
 
-TEMP_FILE_NAME = 'temp.docx'
+TEMP_FILE_NAME = 'media/{name}.docx'
 FORMAT = "%d.%m.%Y"
 DAY_FORMAT = '« {date} »'
 NUMBER_BY_DATE = '{number} от {date}'
 MANUFACTURER_NAME_AND_LOCATION = '{name}\nМесто нахождения: {location}'
-MONTHS = {
-    1: 'января',
-    2: 'февраля',
-    3: 'марта',
-    4: 'апреля',
-    5: 'мая',
-    6: 'июня',
-    7: 'июля',
-    8: 'августа',
-    9: 'сентября',
-    10: 'октября',
-    11: 'ноября',
-    12: 'декабря',
-}
-CONCLUSION_APPLICATION_ANALYZE = 'Заключение анализа заявки'
-CERTIFICATION_DECISION = 'Решение сертификации продукции'
-PRODUCT_EVALUATION_WORK_PLAN = 'План работ по оценке продукции'
-PRELIMINARY_ANALYSIS_PRODUCTION_PROTOCOL = (
+MONTHS = [
+    'января',
+    'февраля',
+    'марта',
+    'апреля',
+    'мая',
+    'июня',
+    'июля',
+    'августа',
+    'сентября',
+    'октября',
+    'ноября',
+    'декабря',
+]
+CONCLUSION_APPLICATION_ANALYZE_RUS = 'Заключение анализа заявки'
+CONCLUSION_APPLICATION_ANALYZE = 'conclusion_application_analyze'
+CERTIFICATION_DECISION_RUS = 'Решение сертификации продукции'
+CERTIFICATION_DECISION = 'application_decision'
+PRODUCT_EVALUATION_WORK_PLAN_RUS = 'План работ по оценке продукции'
+PRODUCT_EVALUATION_WORK_PLAN = 'product_evaluation_work_plan'
+PRELIMINARY_ANALYSIS_PRODUCTION_PROTOCOL_RUS = (
     'Протокол предварительного анализа производства'
 )
-ACT_ANALYSIS_PRODUCTION = 'Акт анализа состояния производства'
-EXPERT_CONCLUSION = 'Заключение эксперта'
-
-PATTERNS = (
-    (CONCLUSION_APPLICATION_ANALYZE, CONCLUSION_APPLICATION_ANALYZE),
-    (CERTIFICATION_DECISION, CERTIFICATION_DECISION),
-    (PRODUCT_EVALUATION_WORK_PLAN, PRODUCT_EVALUATION_WORK_PLAN),
-    (
-        PRELIMINARY_ANALYSIS_PRODUCTION_PROTOCOL,
-        PRELIMINARY_ANALYSIS_PRODUCTION_PROTOCOL
-    ),
-    (EXPERT_CONCLUSION, EXPERT_CONCLUSION)
-
+PRELIMINARY_ANALYSIS_PRODUCTION_PROTOCOL = (
+    'preliminary_analysis_production_protocol'
 )
+ACT_ANALYSIS_PRODUCTION_RUS = 'Акт анализа состояния производства'
+ACT_ANALYSIS_PRODUCTION = 'act_analysis_production'
+EXPERT_CONCLUSION_RUS = 'Заключение эксперта'
+EXPERT_CONCLUSION = 'expert_opinion'
+
+CHANGES = {
+    CONCLUSION_APPLICATION_ANALYZE: CONCLUSION_APPLICATION_ANALYZE_RUS,
+    CERTIFICATION_DECISION: CERTIFICATION_DECISION_RUS,
+    PRODUCT_EVALUATION_WORK_PLAN: PRODUCT_EVALUATION_WORK_PLAN_RUS,
+    PRELIMINARY_ANALYSIS_PRODUCTION_PROTOCOL:
+        PRELIMINARY_ANALYSIS_PRODUCTION_PROTOCOL_RUS,
+    ACT_ANALYSIS_PRODUCTION: ACT_ANALYSIS_PRODUCTION_RUS,
+    EXPERT_CONCLUSION: EXPERT_CONCLUSION_RUS
+}
+PATTERNS = tuple((key, value) for key, value in CHANGES.items())
 MANUFACTURER_LOCATION_IF_EXACT_WORK_LOCATION = (
     '. Место нахождения и адрес места осуществления деятельности по '
     'изготовлению продукции: {location}.'
@@ -65,5 +72,6 @@ PROTOCOL_FORM_FINAL_PLURAL = (
 PROTOCOL_ORDER_FIELD_NAME = 'body_certificate'
 
 ANALYSIS_ACT_FORM = (
-        "\nакта анализа состояния производства № {number} от {date}."
-    )
+    "\nакта анализа состояния производства № {number} от {date}."
+)
+MANUFACTURING_COMPANIES = ' Производственные площадки: '

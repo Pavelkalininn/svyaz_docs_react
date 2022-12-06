@@ -1,5 +1,5 @@
 from api.const import (
-    PATTERNS,
+    PATTERNS, CHANGES,
 )
 from django.contrib.auth.models import (
     AbstractUser,
@@ -1066,7 +1066,7 @@ class Pattern(Model):
     )
 
     def __str__(self):
-        return f'{self.name} от {self.date_issue}'
+        return f'{CHANGES.get(self.name)} от {self.date_issue}'
 
     class Meta:
         ordering = ('name', '-date_issue')
