@@ -1,5 +1,6 @@
 from api.const import (
-    PATTERNS, CHANGES,
+    CHANGES,
+    PATTERNS,
 )
 from django.contrib.auth.models import (
     AbstractUser,

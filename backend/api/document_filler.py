@@ -2,32 +2,64 @@
 from datetime import (
     datetime,
 )
-from wsgiref.util import FileWrapper
+from wsgiref.util import (
+    FileWrapper,
+)
 
 import docx
-from django.db.models import Count, Q
-from django.http import HttpResponse
-from django.utils.encoding import escape_uri_path
-from docx import Document
-from rest_framework import status
-from rest_framework.response import Response
-
 from api.const import (
+    ANALYSIS_ACT_MODIFIED,
+    ANALYSIS_ACT_SIMPLE,
+    APPLICANT_IN_CERTIFICATE_WL_IS_L,
+    APPLICANT_IN_CERTIFICATE_WL_IS_NOT_L,
+    CHANGES,
     DAY_FORMAT,
     FORMAT,
-    MANUFACTURER_NAME_AND_LOCATION,
-    MONTHS,
-    NUMBER_BY_DATE, MANUFACTURER_LOCATION_IF_EXACT_WORK_LOCATION,
     MANUFACTURER_LOCATION_AND_WORK_LOCATION,
-    MANUFACTURING_COMPANIES_WORK_LOCATION,
+    MANUFACTURER_LOCATION_IF_EXACT_WORK_LOCATION,
+    MANUFACTURER_NAME_AND_LOCATION,
+    MANUFACTURING_COMPANIES,
     MANUFACTURING_COMPANIES_LOCATION,
-    PROTOCOL_DATE_NUMBER_FORM, PROTOCOL_FORM_START_PLURAL, PROTOCOL_FORM_START,
-    PROTOCOL_FORM_FINAL_PLURAL, PROTOCOL_FORM_FINAL, PROTOCOL_ORDER_FIELD_NAME,
-    ANALYSIS_ACT_FORM, TEMP_FILE_NAME, CHANGES, MANUFACTURING_COMPANIES,
+    MANUFACTURING_COMPANIES_WORK_LOCATION,
+    MONTHS,
+    NUMBER_BY_DATE,
+    PROTOCOL_DATE_NUMBER_FORM,
+    PROTOCOL_FINAL_MODIFIED,
+    PROTOCOL_FINAL_MODIFIED_PLURAL,
+    PROTOCOL_FINAL_SIMPLE,
+    PROTOCOL_FINAL_SIMPLE_PLURAL,
+    PROTOCOL_ORDER_FIELD_NAME,
+    PROTOCOL_START_SIMPLE_PLURAL,
+    TEMP_FILE_NAME, PROTOCOL_START_MODIFIED_PLURAL, PROTOCOL_START_SIMPLE,
+    PROTOCOL_START_MODIFIED,
 )
-from api.utils import obj_checker
-
-from documents.models import Work, Protocol, Pattern
+from api.utils import (
+    obj_checker,
+)
+from django.db.models import (
+    Count,
+    Q,
+)
+from django.http import (
+    HttpResponse,
+)
+from django.utils.encoding import (
+    escape_uri_path,
+)
+from documents.models import (
+    Pattern,
+    Protocol,
+    Work,
+)
+from docx import (
+    Document,
+)
+from rest_framework import (
+    status,
+)
+from rest_framework.response import (
+    Response,
+)
 
 
 def date_format(date: datetime.date) -> str:
@@ -44,16 +76,23 @@ def is_qms(text: str):
 
 class FillInDocument:
 
-    def __init__(self, work, template):
-        self.work = work
-        self.template = template
-        self.template_rus = CHANGES.get(self.template)
+    def __init__(self, work: Work, template: str):
+        self.work: Work = work
+        self.template: str = template
+        self.template_rus: str = CHANGES.get(self.template)
 
     def get_changes(self):
         return getattr(self, self.template)()
 
     def get_document_date(self):
         return getattr(self.work, f'{self.template}_date')
+
+    def get_docs_with_application_without_report(self):
+        docs_with_application_without_report: list = []
+        for value in self.work.application.docs_with_application:
+            if "протокол" not in value and "Протокол" not in value:
+                docs_with_application_without_report.append(value)
+        return docs_with_application_without_report
 
     def get_manufacturing_companies(self):
         manufacturing_companies = []
@@ -81,7 +120,54 @@ class FillInDocument:
             for obj in self.work.application.tn_ved_keys.all()
         )
 
-    def get_certificate_protocols_with_description(self) -> str:
+    def get_manufacturer_location(self):
+        manufacturer_data = {
+            'location': self.work.application.manufacturer.location,
+            'work_location': self.work.application.manufacturer.work_location
+        }
+        if (
+                manufacturer_data.get('location')
+                in (manufacturer_data.get('work_location'),)
+        ):
+            return (
+                MANUFACTURER_LOCATION_IF_EXACT_WORK_LOCATION.format(
+                    **manufacturer_data
+                )
+            )
+        return (
+            MANUFACTURER_LOCATION_AND_WORK_LOCATION.format(
+                **manufacturer_data
+            )
+        )
+
+    def get_report_evidentiary_and_analise_act(
+            self,
+            simple=True,
+            backspace=True
+    ):
+        report_evidentiary = self.get_certificate_protocols_with_description(
+            simple, backspace
+        ) or ''
+        analysis_act = ''
+        if self.work.act_analysis_production_date:
+            if simple:
+                analysis_act = ANALYSIS_ACT_SIMPLE.format(
+                    number=self.work.number,
+                    date=date_format(self.work.act_analysis_production_date)
+                )
+            else:
+                analysis_act = ANALYSIS_ACT_MODIFIED.format(
+                    number=self.work.number,
+                    date=date_format(self.work.act_analysis_production_date)
+                )
+
+        return f'{report_evidentiary}{analysis_act}'
+
+    def get_certificate_protocols_with_description(
+            self,
+            simple: bool = True,
+            backspace: bool = True
+    ) -> str:
         protocols = []
         provided_protocols = Protocol.objects.filter(
             Q(works=self.work)
@@ -104,49 +190,82 @@ class FillInDocument:
             for data in body_count
         }
         body_protocol_count = 0
+        line_break = ''
+        if backspace:
+            line_break = '\n'
+        first_protocol = True
         for protocol in provided_protocols:
+            first_char = 'П' if first_protocol or backspace else 'п'
             if body_protocol_count == 0:
                 if counter.get(protocol.body_certificate) > 1:
-                    protocols.append(PROTOCOL_FORM_START_PLURAL)
+                    if simple:
+                        protocols.append(
+                            first_char + PROTOCOL_START_SIMPLE_PLURAL
+                        )
+                    else:
+                        protocols.append(
+                            first_char + PROTOCOL_START_MODIFIED_PLURAL
+                        )
                 else:
-                    protocols.append(PROTOCOL_FORM_START)
+                    if simple:
+                        protocols.append(
+                            first_char + PROTOCOL_START_SIMPLE
+                        )
+                    else:
+                        protocols.append(
+                            first_char + PROTOCOL_START_MODIFIED
+                        )
             body_protocol_count += 1
+            first_protocol = False
+            protocol_num_and_date = {
+                'number': protocol.number,
+                'date': date_format(protocol.date)
+            }
             if body_protocol_count != counter.get(protocol.body_certificate):
                 protocols.append(
                     PROTOCOL_DATE_NUMBER_FORM.format(
-                        number=protocol.number,
-                        date=date_format(protocol.date)
+                        **protocol_num_and_date
                     ) + ','
                 )
             else:
                 protocols.append(
-                    PROTOCOL_DATE_NUMBER_FORM.format(
-                        number=protocol.number,
-                        date=date_format(protocol.date)
-                    )
+                    PROTOCOL_DATE_NUMBER_FORM.format(**protocol_num_and_date)
                 )
+                body = {
+                    'body_name': protocol.body_name,
+                    'body_certificate': protocol.body_certificate
+                }
                 if counter.get(protocol.body_certificate) > 1:
-                    protocols.append(
-                        PROTOCOL_FORM_FINAL_PLURAL.format(
-                            body_name=protocol.body_name,
-                            body_certificate=protocol.body_certificate
+                    if simple:
+                        protocols.append(
+                            PROTOCOL_FINAL_SIMPLE_PLURAL.format(**body)
+                            + line_break
                         )
-                    )
+                    else:
+                        protocols.append(
+                            PROTOCOL_FINAL_MODIFIED_PLURAL.format(**body)
+                            + line_break
+                        )
+
                 else:
-                    protocols.append(
-                        PROTOCOL_FORM_FINAL.format(
-                            body_name=protocol.body_name,
-                            body_certificate=protocol.body_certificate
+                    if simple:
+                        protocols.append(
+                            PROTOCOL_FINAL_SIMPLE.format(**body)
+                            + line_break
                         )
-                    )
+                    else:
+                        protocols.append(
+                            PROTOCOL_FINAL_MODIFIED.format(**body)
+                            + line_break
+                        )
                 body_protocol_count = 0
         return ' '.join(protocols)
 
     def document_creator(self):
-        file = self.form_fill()
+        temp_filename = self.form_fill()
         filename = escape_uri_path(f'{self.template_rus} {self.work.name}')
-        if file:
-            with open(file, 'rb') as worddoc:
+        if temp_filename:
+            with open(temp_filename, 'rb') as worddoc:
                 return HttpResponse(
                     FileWrapper(
                         worddoc
@@ -232,7 +351,7 @@ class FillInDocument:
                     date=self.work.application_decision_date.day
                 ),
             'certification_decision_month':
-                MONTHS[self.work.application_decision_date.month],
+                MONTHS[self.work.application_decision_date.month - 1],
             'certification_decision_year':
                 f'{self.work.application_decision_date.year}г.',
             'application_dt':
@@ -284,7 +403,7 @@ class FillInDocument:
                     date=self.work.product_evaluation_work_plan_date.day
                 ),
             'product_evaluation_work_plan_month':
-                MONTHS[self.work.product_evaluation_work_plan_date.month],
+                MONTHS[self.work.product_evaluation_work_plan_date.month - 1],
             'product_evaluation_work_plan_year':
                 f'{self.work.product_evaluation_work_plan_date.year}г.',
             'applicant_name':
@@ -345,36 +464,19 @@ class FillInDocument:
         }
 
     def act_analysis_production(self) -> dict:
+        act_day = act_month = act_year = ""
         if self.work.act_analysis_production_date:
             act_day = DAY_FORMAT.format(
                 date=self.work.act_analysis_production_date.day
             )
-            act_month = MONTHS[self.work.act_analysis_production_date.month]
+            act_month = MONTHS[
+                self.work.act_analysis_production_date.month - 1
+            ]
             act_year = f'{self.work.act_analysis_production_date.year}г.'
-        else:
-            act_day = act_month = act_year = ""
         qms_certificate_evidentiary = []
         for value in doc_splitter(self.work.application.docs_with_application):
             if is_qms(value):
                 qms_certificate_evidentiary.append(value)
-        if (
-                self.work.application.manufacturer.location
-                in (self.work.application.manufacturer.work_location,)
-        ):
-            manufacturer_location_and_work_location = (
-                MANUFACTURER_LOCATION_IF_EXACT_WORK_LOCATION.format(
-                    location=self.work.application.manufacturer.location
-                )
-            )
-        else:
-            manufacturer_location_and_work_location = (
-                MANUFACTURER_LOCATION_AND_WORK_LOCATION.format(
-                    location=self.work.application.manufacturer.location,
-                    work_location=(
-                        self.work.application.manufacturer.work_location
-                    )
-                )
-            )
 
         duration_till_date = date_format(
             self.work.analysis_production_duration_till_date
@@ -395,7 +497,7 @@ class FillInDocument:
                 self.work.application.prod_name,
             'manufacturer_name_with_location_and_work_location': (
                 f'Изготовитель: {self.work.application.manufacturer.name}'
-                f'{manufacturer_location_and_work_location}'
+                f'{self.get_manufacturer_location()}'
                 f'{self.get_manufacturing_companies()}'),
             'analysis_production_duration_till_date':
                 f'По {duration_till_date}',
@@ -414,23 +516,6 @@ class FillInDocument:
         }
 
     def expert_opinion(self):
-        report_evidentiary = self.get_certificate_protocols_with_description(
-
-        ) or ''
-        analysis_act = ''
-        if self.work.act_analysis_production_date:
-            analysis_act = ANALYSIS_ACT_FORM.format(
-                number=self.work.number,
-                date=date_format(self.work.act_analysis_production_date)
-            )
-
-        report_evidentiary_and_analyze_act = report_evidentiary + analysis_act
-        docs_with_application_without_report = (
-            self.work.application.docs_with_application
-        )
-        for value in docs_with_application_without_report:
-            if "протокол" in value or "Протокол" in value:
-                docs_with_application_without_report.remove(value)
         return {
             'application_num':
                 self.work.number,
@@ -490,11 +575,13 @@ class FillInDocument:
                     date=date_format(self.work.expert_opinion_date)
                 ),
             'docs_with_application_without_report':
-                "".join(docs_with_application_without_report).replace(
+                "".join(
+                    self.get_docs_with_application_without_report()
+                ).replace(
                     '\r', ''
                 ),
             'report_evidentiary_and_analyze_act':
-                report_evidentiary_and_analyze_act,
+                self.get_report_evidentiary_and_analise_act(True, True),
             'decision_description':
                 f'Соблюдение требований {self.work.application.reglament} '
                 f'обеспечивается в результате применения на добровольной '
@@ -503,7 +590,144 @@ class FillInDocument:
 
         }
 
-# def certification_decision(work):
-#     return {
-#
-#     }
+    def conclusion_of_conformity_assessment(self):
+        return {
+            'conclusion_of_conformity_assessment_num_with_date':
+                NUMBER_BY_DATE.format(
+                    number=self.work.number,
+                    date=date_format(
+                        self.work.conclusion_of_conformity_assessment_date
+                    )
+                ),
+            'certification_decision_num_and_dt':
+                NUMBER_BY_DATE.format(
+                    number=self.work.number,
+                    date=date_format(
+                        self.work.application_decision_date
+                    )
+                ),
+            'applicant_name':
+                self.work.application.applicant.name,
+            'prod_name_and_certification_object':
+                f'{self.work.application.prod_name}. '
+                f'{self.work.application.certification_object.name}',
+            'manufacturer_name':
+                f'{self.work.application.manufacturer.name}. '
+                f'{self.work.application.manufacturer.country}',
+            'number_of_requirenment':
+                f'{self.work.application.reglament.name}\n'
+                f'{self.work.application.standard.name}',
+            'report_evidentiary_and_analyze_act':
+                self.get_report_evidentiary_and_analise_act(
+                    simple=False,
+                    backspace=True
+                ),
+            'docs_with_application_without_report':
+                "".join(
+                    self.get_docs_with_application_without_report()
+                ).replace(
+                    '\r', ''
+                ),
+            'conclusion_of_conformity_assessment_expert':
+                self.work.conclusion_expert.name
+        }
+
+    def release_decision(self):
+        return {
+            'application_num':
+                self.work.number,
+            'release_decision_day':
+                f'«{self.work.release_decision_date.day}»',
+            'release_decision_month':
+                MONTHS[self.work.release_decision_date.month - 1],
+            'release_decision_year':
+                f'{self.work.release_decision_date.year}г.',
+            'num_and_date_conclusion_of_conformity_assessment':
+                NUMBER_BY_DATE.format(
+                    number=self.work.number,
+                    date=date_format(
+                        self.work.conclusion_of_conformity_assessment_date
+                    )
+                ),
+            'prod_name_and_certification_object':
+                f'{self.work.application.prod_name}. '
+                f'{self.work.application.certification_object.name}',
+            'report_evidentiary_and_analyze_act':
+                self.get_report_evidentiary_and_analise_act(False, True),
+            'reglament':
+                self.work.application.reglament.name,
+            'certificate_valid_untill_date':
+                date_format(self.work.certificate_expiry_date),
+            'head_of_certification_body_in_certificate':
+                self.work.certificate_head.full_name
+        }
+
+    def certificate_issue(self):
+        applicant_data = {
+            'location': self.work.application.applicant.informations.filter(
+                date_issue__lte=self.work.expert_opinion_date
+            ).first().applicant_location,
+            'work_location':
+                self.work.application.applicant.informations.filter(
+                    date_issue__lte=self.work.expert_opinion_date
+            ).first().applicant_work_location,
+            'name': self.work.application.applicant.name,
+            'ogrn': self.work.application.applicant.informations.filter(
+                date_issue__lte=self.work.expert_opinion_date
+            ).first().ogrn,
+            'phone': self.work.application.applicant.informations.filter(
+                date_issue__lte=self.work.certificate_issue_date
+            ).first(
+            ).phone_num,
+            'e_mail': self.work.application.applicant.informations.filter(
+                date_issue__lte=self.work.expert_opinion_date
+            ).first().e_mail,
+        }
+
+        applicant = APPLICANT_IN_CERTIFICATE_WL_IS_L.format(
+            **applicant_data
+        )
+        if applicant_data.get('location') != applicant_data.get(
+                'work_location'
+        ):
+            applicant = APPLICANT_IN_CERTIFICATE_WL_IS_NOT_L.format(
+                **applicant_data
+            )
+        return {
+            'certificate_num': f'-021/S.A-{self.work.certificate_number}',
+            'applicant_name_with_addresses':
+                applicant,
+            'manufacturer_name_with_addresses':
+                (
+                    f'{self.work.application.manufacturer.name}'
+                    f'{self.get_manufacturer_location()}'
+                    f'{self.get_manufacturing_companies()}'
+                ),
+            'prod_name_and_certification_object':
+                f'{self.work.application.prod_name}. '
+                f'{self.work.application.certification_object.name}',
+            'tn_ved_key':
+                self.get_tn_ved_keys(),
+            'report_evidentiary_and_analyze_act_with_schem':
+                self.get_report_evidentiary_and_analise_act(False, False)
+                + '. Схема сертификации - '
+                + self.work.application.schem.name
+                + '.',
+            'additional_information':
+                'Соблюдение требований '
+                + self.work.application.standard.name
+                + ' обеспечивается в результате применения на '
+                  'добровольной основе '
+                + self.work.application.standard.name
+                + '. Условия и сроки хранения продукции, срок службы ('
+                  'ресурс) '
+                + 'устанавливаются согласно документации изготовителя.',
+            'cerificate_issue_date':
+                date_format(self.work.certificate_issue_date),
+            'certificate_valid_untill_date':
+                date_format(self.work.certificate_expiry_date),
+            'head_of_certification_body_in_certificate':
+                self.work.certificate_head.full_name,
+            "certificate_expert":
+                self.work.certificate_expert.full_name
+        }

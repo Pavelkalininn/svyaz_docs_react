@@ -35,6 +35,12 @@ ACT_ANALYSIS_PRODUCTION_RUS = 'Акт анализа состояния прои
 ACT_ANALYSIS_PRODUCTION = 'act_analysis_production'
 EXPERT_CONCLUSION_RUS = 'Заключение эксперта'
 EXPERT_CONCLUSION = 'expert_opinion'
+CONCLUSION_OF_CONFORMITY_ASSESSMENT_RUS = 'Заключение оценки соответствия'
+CONCLUSION_OF_CONFORMITY_ASSESSMENT = 'conclusion_of_conformity_assessment'
+RELEASE_DECISION_RUS = 'Решение о выдаче'
+RELEASE_DECISION = 'release_decision'
+CERTIFICATE_ISSUE_RUS = 'Сертификат соответствия'
+CERTIFICATE_ISSUE = 'certificate_issue'
 
 CHANGES = {
     CONCLUSION_APPLICATION_ANALYZE: CONCLUSION_APPLICATION_ANALYZE_RUS,
@@ -43,7 +49,11 @@ CHANGES = {
     PRELIMINARY_ANALYSIS_PRODUCTION_PROTOCOL:
         PRELIMINARY_ANALYSIS_PRODUCTION_PROTOCOL_RUS,
     ACT_ANALYSIS_PRODUCTION: ACT_ANALYSIS_PRODUCTION_RUS,
-    EXPERT_CONCLUSION: EXPERT_CONCLUSION_RUS
+    EXPERT_CONCLUSION: EXPERT_CONCLUSION_RUS,
+    CONCLUSION_OF_CONFORMITY_ASSESSMENT:
+        CONCLUSION_OF_CONFORMITY_ASSESSMENT_RUS,
+    RELEASE_DECISION: RELEASE_DECISION_RUS,
+    CERTIFICATE_ISSUE: CERTIFICATE_ISSUE_RUS
 }
 PATTERNS = tuple((key, value) for key, value in CHANGES.items())
 MANUFACTURER_LOCATION_IF_EXACT_WORK_LOCATION = (
@@ -54,24 +64,55 @@ MANUFACTURER_LOCATION_AND_WORK_LOCATION = (
     '. Место нахождения: {location}. Адрес места осуществления деятельности'
     ' по изготовлению продукции: {work_location}.'
 )
-MANUFACTURING_COMPANIES_LOCATION = '. Место нахождения: {location}'
+MANUFACTURING_COMPANIES_LOCATION = '. Адрес места нахождения: {location}'
 MANUFACTURING_COMPANIES_WORK_LOCATION = (
     '. Адрес места осуществления деятельности: {work_location}'
 )
-PROTOCOL_FORM_START = 'Протокола испытаний №'
-PROTOCOL_FORM_START_PLURAL = 'Протоколов испытаний №№'
-PROTOCOL_DATE_NUMBER_FORM = '{number} от {date}г.'
-PROTOCOL_FORM_FINAL = (
-    'выданного {body_name}, '
-    'регистрационный номер аттестата аккредитации {body_certificate}. '
-)
-PROTOCOL_FORM_FINAL_PLURAL = (
-    'выданных {body_name}, '
-    'регистрационный номер аттестата аккредитации {body_certificate}. '
-)
-PROTOCOL_ORDER_FIELD_NAME = 'body_certificate'
 
-ANALYSIS_ACT_FORM = (
-    "\nакта анализа состояния производства № {number} от {date}."
+
+PROTOCOL_START_SIMPLE_PLURAL = 'ротоколы испытаний №№'
+PROTOCOL_START_MODIFIED_PLURAL = 'ротоколов испытаний №№'
+PROTOCOL_START_SIMPLE = 'ротокол испытаний №'
+PROTOCOL_START_MODIFIED = 'ротокола испытаний №'
+
+PROTOCOL_DATE_NUMBER_FORM = '{number} от {date}г.'
+
+PROTOCOL_FINAL_MODIFIED = (
+    'выданного {body_name}, '
+    'регистрационный номер аттестата аккредитации {body_certificate}, '
+)
+PROTOCOL_FINAL_MODIFIED_PLURAL = (
+    'выданных {body_name}, '
+    'регистрационный номер аттестата аккредитации {body_certificate}, '
+)
+PROTOCOL_FINAL_SIMPLE = (
+    'выданный {body_name}, '
+    'регистрационный номер аттестата аккредитации {body_certificate}, '
+)
+PROTOCOL_FINAL_SIMPLE_PLURAL = (
+    'выданные {body_name}, '
+    'регистрационный номер аттестата аккредитации {body_certificate}, '
+)
+
+ANALYSIS_ACT_SIMPLE = (
+    "акт анализа состояния производства № {number} от {date}."
+)
+ANALYSIS_ACT_MODIFIED = (
+    "акта анализа состояния производства № {number} от {date}."
 )
 MANUFACTURING_COMPANIES = ' Производственные площадки: '
+PROTOCOL_ORDER_FIELD_NAME = 'body_certificate'
+
+APPLICANT_IN_CERTIFICATE_WL_IS_L = (
+    '{name}. Место нахождения и адрес осуществления деятельности: {location}'
+    '. Основной государственный регистрационный номер: {ogrn}'
+    ', телефон: {phone}'
+    ', адрес электронной почты: {e_mail}.'
+)
+APPLICANT_IN_CERTIFICATE_WL_IS_NOT_L = (
+    '{name}. Адрес места нахождения: {location}.'
+    ' Адрес места осуществления деятельности: {work_location}'
+    '. Основной государственный регистрационный номер: {ogrn}'
+    ', телефон: {phone}'
+    ', адрес электронной почты: {e_mail}.'
+)

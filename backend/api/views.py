@@ -1,7 +1,7 @@
 # -*- coding: UTF-8 -*-
-from rest_framework.generics import get_object_or_404
-
-from api.document_filler import FillInDocument
+from api.document_filler import (
+    FillInDocument,
+)
 from api.filters import (
     AgreementFilter,
     ApplicantFilter,
@@ -79,6 +79,9 @@ from documents.models import (
 )
 from rest_framework.decorators import (
     action,
+)
+from rest_framework.generics import (
+    get_object_or_404,
 )
 from rest_framework.mixins import (
     CreateModelMixin,
