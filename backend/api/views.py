@@ -1,10 +1,6 @@
 # -*- coding: UTF-8 -*-
-from api.const import (
-    ACT_ANALYSIS_PRODUCTION,
-    CERTIFICATION_DECISION,
-    CONCLUSION_APPLICATION_ANALYZE,
-    PRELIMINARY_ANALYSIS_PRODUCTION_PROTOCOL,
-    PRODUCT_EVALUATION_WORK_PLAN, EXPERT_CONCLUSION,
+from api.document_filler import (
+    FillInDocument,
 )
 from api.filters import (
     AgreementFilter,
@@ -52,9 +48,6 @@ from api.serializers import (
     TnVedKeySerializer,
     WorkSerializer,
 )
-from api.utils import (
-    document_creator,
-)
 from django.contrib.auth import (
     get_user_model,
 )
@@ -86,6 +79,9 @@ from documents.models import (
 )
 from rest_framework.decorators import (
     action,
+)
+from rest_framework.generics import (
+    get_object_or_404,
 )
 from rest_framework.mixins import (
     CreateModelMixin,
@@ -212,53 +208,17 @@ class WorkViewSet(ModelViewSet):
     filterset_class = WorkFilter
     filterset_fields = ('name', 'number')
 
-    @action(
-        methods=['get'],
-        permission_classes=(IsStaffOnly,),
-        detail=True,
-    )
-    def download_conclusion_application_analise(self, request, pk):
-        return document_creator(CONCLUSION_APPLICATION_ANALYZE, pk)
-
-    @action(
-        methods=['get'],
-        permission_classes=(IsStaffOnly,),
-        detail=True,
-    )
-    def download_certification_decision(self, request, pk):
-        return document_creator(CERTIFICATION_DECISION, pk)
-
-    @action(
-        methods=['get'],
-        permission_classes=(IsStaffOnly,),
-        detail=True,
-    )
-    def download_product_evaluation_work_plan(self, request, pk):
-        return document_creator(PRODUCT_EVALUATION_WORK_PLAN, pk)
-
-    @action(
-        methods=['get'],
-        permission_classes=(IsStaffOnly,),
-        detail=True,
-    )
-    def download_preliminary_analysis_production_protocol(self, request, pk):
-        return document_creator(PRELIMINARY_ANALYSIS_PRODUCTION_PROTOCOL, pk)
-
-    @action(
-        methods=['get'],
-        permission_classes=(IsStaffOnly,),
-        detail=True,
-    )
-    def download_act_analysis_production(self, request, pk):
-        return document_creator(ACT_ANALYSIS_PRODUCTION, pk)
-
-    @action(
-        methods=['get'],
-        permission_classes=(IsStaffOnly,),
-        detail=True,
-    )
-    def download_expert_conclusion(self, request, pk):
-        return document_creator(EXPERT_CONCLUSION, pk)
+    @action(methods=['get'],
+            detail=True,
+            permission_classes=[IsStaffOnly],
+            url_path=r'download/(?P<template_name>[a-z0-9_-]+)',
+            url_name='download'
+            )
+    def download_doc(self, request, pk, template_name):
+        return FillInDocument(
+            get_object_or_404(Work, pk=pk),
+            template_name
+        ).document_creator()
 
 
 class ProtocolViewSet(

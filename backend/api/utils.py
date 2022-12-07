@@ -2,46 +2,13 @@
 from datetime import (
     date,
 )
-from wsgiref.util import (
-    FileWrapper,
-)
 
-import docx
-from django.db.models import Count, Q
-
-from api.const import (
-    TEMP_FILE_NAME, PROTOCOL_FORM_FINAL_PLURAL, PROTOCOL_FORM_FINAL,
-    PROTOCOL_DATE_NUMBER_FORM, PROTOCOL_FORM_START, PROTOCOL_FORM_START_PLURAL,
-    PROTOCOL_ORDER_FIELD_NAME,
-)
-from api.document_filler import (
-    CHANGES, date_format,
-)
-from django.http import (
-    HttpResponse,
-)
-from django.utils.encoding import (
-    escape_uri_path,
-)
-from documents.models import (
-    Pattern,
-    Work, Protocol,
-)
 from docx import (
     Document,
 )
 from docx.shared import (
     Pt,
     RGBColor,
-)
-from rest_framework import (
-    status,
-)
-from rest_framework.generics import (
-    get_object_or_404,
-)
-from rest_framework.response import (
-    Response,
 )
 
 
@@ -129,46 +96,3 @@ def sections_checker(full_doc: Document, change_line: dict):
 
 def obj_checker(checked_obj: Document, change_line: dict) -> None:
     sections_checker(checked_obj, change_line)
-
-
-def get_changes(work, document_name):
-    return CHANGES.get(document_name)[0](work)
-
-
-def form_fill(
-        work: Work, template_name: str
-) -> Document:
-    pattern = Pattern.objects.filter(
-        date_issue__lte=getattr(work, CHANGES.get(template_name)[1]),
-        name=template_name
-    ).first()
-    if pattern:
-        doc = docx.Document(pattern.file)
-        obj_checker(doc, get_changes(work, template_name))
-        doc.save(TEMP_FILE_NAME)
-        return TEMP_FILE_NAME
-    return None
-
-
-def document_creator(template_name, work_pk):
-    work = get_object_or_404(Work, pk=work_pk)
-    file = form_fill(work, template_name)
-    filename = escape_uri_path(f'{template_name} {work.name}')
-    if file:
-        with open(file, 'rb') as worddoc:
-            return HttpResponse(
-                FileWrapper(
-                    worddoc
-                ),
-                headers={
-                    'Content-Type':
-                        'application/vnd.openxmlformats-officedocument'
-                        '.wordprocessingml.document',
-                    'Content-Disposition':
-                        f'attachment; filename="{filename}.docx"',
-                }
-            )
-    return Response(
-        data={'detail': 'Нет подходящего шаблона'},
-        status=status.HTTP_404_NOT_FOUND
-    )
