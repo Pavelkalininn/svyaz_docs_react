@@ -1,4 +1,5 @@
 # -*- coding: UTF-8 -*-
+from api.const import APPLICATION
 from api.document_filler import (
     FillInDocument,
 )
@@ -387,6 +388,16 @@ class ApplicationViewSet(
                 owner=self.request.user
             )
         return serializer.save()
+
+    @action(methods=['get'],
+            detail=True,
+            permission_classes=[IsStaffOnly],
+            )
+    def get_application(self, request, pk):
+        return FillInDocument(
+            get_object_or_404(Application, pk=pk),
+            APPLICATION
+        ).document_creator()
 
 
 class ProxyViewSet(

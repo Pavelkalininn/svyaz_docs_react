@@ -41,8 +41,10 @@ RELEASE_DECISION_RUS = 'Решение о выдаче'
 RELEASE_DECISION = 'release_decision'
 CERTIFICATE_ISSUE_RUS = 'Сертификат соответствия'
 CERTIFICATE_ISSUE = 'certificate_issue'
-
+APPLICATION_RUS = 'Заявка на сертификацию'
+APPLICATION = 'application_create'
 CHANGES = {
+    APPLICATION: APPLICATION_RUS,
     CONCLUSION_APPLICATION_ANALYZE: CONCLUSION_APPLICATION_ANALYZE_RUS,
     CERTIFICATION_DECISION: CERTIFICATION_DECISION_RUS,
     PRODUCT_EVALUATION_WORK_PLAN: PRODUCT_EVALUATION_WORK_PLAN_RUS,
@@ -53,7 +55,7 @@ CHANGES = {
     CONCLUSION_OF_CONFORMITY_ASSESSMENT:
         CONCLUSION_OF_CONFORMITY_ASSESSMENT_RUS,
     RELEASE_DECISION: RELEASE_DECISION_RUS,
-    CERTIFICATE_ISSUE: CERTIFICATE_ISSUE_RUS
+    CERTIFICATE_ISSUE: CERTIFICATE_ISSUE_RUS,
 }
 PATTERNS = tuple((key, value) for key, value in CHANGES.items())
 MANUFACTURER_LOCATION_IF_EXACT_WORK_LOCATION = (
@@ -115,4 +117,11 @@ APPLICANT_IN_CERTIFICATE_WL_IS_NOT_L = (
     '. Основной государственный регистрационный номер: {ogrn}'
     ', телефон: {phone}'
     ', адрес электронной почты: {e_mail}.'
+)
+APPLICANT_LOCATION_IN_APPLICATION_DIFFERENT = (
+    'Адрес места нахождения: {location}.'
+    ' Адрес места осуществления деятельности: {work_location}'
+)
+APPLICANT_LOCATION_IN_APPLICATION_EXACT = (
+    'Место нахождения и адрес осуществления деятельности: {location}.'
 )
