@@ -1,8 +1,13 @@
 # -*- coding: UTF-8 -*-
 from datetime import (
-    datetime, timedelta, date,
+    date,
+    datetime,
+    timedelta,
 )
-from typing import Union, Type, Optional
+from typing import (
+    Optional,
+    Type,
+)
 from wsgiref.util import (
     FileWrapper,
 )
@@ -13,6 +18,9 @@ from api.const import (
     ANALYSIS_ACT_SIMPLE,
     APPLICANT_IN_CERTIFICATE_WL_IS_L,
     APPLICANT_IN_CERTIFICATE_WL_IS_NOT_L,
+    APPLICANT_LOCATION_IN_APPLICATION_DIFFERENT,
+    APPLICANT_LOCATION_IN_APPLICATION_EXACT,
+    APPLICATION,
     CHANGES,
     DAY_FORMAT,
     FORMAT,
@@ -34,8 +42,7 @@ from api.const import (
     PROTOCOL_START_MODIFIED_PLURAL,
     PROTOCOL_START_SIMPLE,
     PROTOCOL_START_SIMPLE_PLURAL,
-    TEMP_FILE_NAME, APPLICANT_LOCATION_IN_APPLICATION_DIFFERENT,
-    APPLICANT_LOCATION_IN_APPLICATION_EXACT, APPLICATION,
+    TEMP_FILE_NAME,
 )
 from api.utils import (
     obj_checker,
@@ -51,9 +58,10 @@ from django.utils.encoding import (
     escape_uri_path,
 )
 from documents.models import (
+    Application,
     Pattern,
     Protocol,
-    Work, Application,
+    Work,
 )
 from docx import (
     Document,
@@ -182,6 +190,38 @@ class FillInDocument:
 
         return f'{report_evidentiary}{analysis_act}'
 
+    @staticmethod
+    def __get_protocols_start(
+            counter: dict,
+            simple: bool,
+            protocol: Protocol
+    ) -> str:
+        if counter.get(protocol.body_certificate) > 1:
+            if simple:
+                return PROTOCOL_START_SIMPLE_PLURAL
+            return PROTOCOL_START_MODIFIED_PLURAL
+        if simple:
+            return PROTOCOL_START_SIMPLE
+        return PROTOCOL_START_MODIFIED
+
+    @staticmethod
+    def __get_protocol_end(
+            counter: dict,
+            simple: bool,
+            protocol: Protocol
+    ) -> str:
+        body = {
+            'body_name': protocol.body_name,
+            'body_certificate': protocol.body_certificate
+        }
+        if counter.get(protocol.body_certificate) > 1:
+            if simple:
+                return PROTOCOL_FINAL_SIMPLE_PLURAL.format(**body)
+            return PROTOCOL_FINAL_MODIFIED_PLURAL.format(**body)
+        if simple:
+            return PROTOCOL_FINAL_SIMPLE.format(**body)
+        return PROTOCOL_FINAL_MODIFIED.format(**body)
+
     def get_certificate_protocols_with_description(
             self,
             simple: bool = True,
@@ -216,24 +256,10 @@ class FillInDocument:
         for protocol in provided_protocols:
             first_char = 'П' if first_protocol or backspace else 'п'
             if body_protocol_count == 0:
-                if counter.get(protocol.body_certificate) > 1:
-                    if simple:
-                        protocols.append(
-                            first_char + PROTOCOL_START_SIMPLE_PLURAL
-                        )
-                    else:
-                        protocols.append(
-                            first_char + PROTOCOL_START_MODIFIED_PLURAL
-                        )
-                else:
-                    if simple:
-                        protocols.append(
-                            first_char + PROTOCOL_START_SIMPLE
-                        )
-                    else:
-                        protocols.append(
-                            first_char + PROTOCOL_START_MODIFIED
-                        )
+                protocols.append(
+                    first_char
+                    + self.__get_protocols_start(counter, simple, protocol)
+                )
             body_protocol_count += 1
             first_protocol = False
             protocol_num_and_date = {
@@ -250,33 +276,10 @@ class FillInDocument:
                 protocols.append(
                     PROTOCOL_DATE_NUMBER_FORM.format(**protocol_num_and_date)
                 )
-                body = {
-                    'body_name': protocol.body_name,
-                    'body_certificate': protocol.body_certificate
-                }
-                if counter.get(protocol.body_certificate) > 1:
-                    if simple:
-                        protocols.append(
-                            PROTOCOL_FINAL_SIMPLE_PLURAL.format(**body)
-                            + line_break
-                        )
-                    else:
-                        protocols.append(
-                            PROTOCOL_FINAL_MODIFIED_PLURAL.format(**body)
-                            + line_break
-                        )
-
-                else:
-                    if simple:
-                        protocols.append(
-                            PROTOCOL_FINAL_SIMPLE.format(**body)
-                            + line_break
-                        )
-                    else:
-                        protocols.append(
-                            PROTOCOL_FINAL_MODIFIED.format(**body)
-                            + line_break
-                        )
+                protocols.append(
+                    self.__get_protocol_end(counter, simple, protocol)
+                    + line_break
+                )
                 body_protocol_count = 0
         return ' '.join(protocols)
 
@@ -681,9 +684,9 @@ class FillInDocument:
 
     def certificate_issue(self) -> dict:
         certificate_issue_date = (
-                    date_format(self.work.certificate_issue_date)
-                    or datetime.today().date()
-                )
+            date_format(self.work.certificate_issue_date)
+            or datetime.today().date()
+        )
         applicant_data = {
             'location': self.application.applicant.informations.filter(
                 date_issue__lte=certificate_issue_date
@@ -716,7 +719,7 @@ class FillInDocument:
             )
         current_year = datetime.today().year
         certificate_number = (
-                self.work.certificate_number or f'0XXX-{current_year}'
+            self.work.certificate_number or f'0XXX-{current_year}'
         )
         return {
             'certificate_num': f'-021/S.A-{certificate_number}',
@@ -785,9 +788,9 @@ class FillInDocument:
                 )
             )
         phone = self.application.applicant.informations.first(
-            ).phone_num
+        ).phone_num
         e_mail = self.application.applicant.informations.first(
-            ).e_mail
+        ).e_mail
         manufacturer_data = {
             'location':
                 self.application.manufacturer.location,

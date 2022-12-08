@@ -1,8 +1,6 @@
 from django.contrib.auth import (
     get_user_model,
 )
-from rest_framework.fields import SerializerMethodField
-
 from documents.models import (
     QMS,
     Agreement,
@@ -25,6 +23,9 @@ from documents.models import (
     Standard,
     TnVedKey,
     Work,
+)
+from rest_framework.fields import (
+    SerializerMethodField,
 )
 from rest_framework.serializers import (
     ModelSerializer,
