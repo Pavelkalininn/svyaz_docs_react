@@ -1,5 +1,7 @@
 # -*- coding: UTF-8 -*-
-from api.const import APPLICATION
+from api.const import (
+    APPLICATION,
+)
 from api.document_filler import (
     FillInDocument,
 )
