@@ -219,7 +219,10 @@ class WorkViewSet(ModelViewSet):
             )
     def download_doc(self, request, pk, template_name):
         return FillInDocument(
-            get_object_or_404(Work, pk=pk),
+            get_object_or_404(
+                Work.objects.select_related().prefetch_related(),
+                pk=pk
+            ),
             template_name
         ).document_creator()
 
@@ -397,7 +400,7 @@ class ApplicationViewSet(
             )
     def get_application(self, request, pk):
         return FillInDocument(
-            get_object_or_404(Application, pk=pk),
+            get_object_or_404(Application.objects.select_related(), pk=pk),
             APPLICATION
         ).document_creator()
 
