@@ -2,7 +2,9 @@ import os
 from pathlib import (
     Path,
 )
+import backend.tasks
 
+from celery.schedules import crontab
 from dotenv import (
     load_dotenv,
 )
@@ -15,14 +17,10 @@ load_dotenv()
 SECRET_KEY = os.getenv('SECRET_KEY', default='tokentokentokentokentokentokentokentokentokent')
 DEBUG = True
 
-ALLOWED_HOSTS = ['*']
+CELERY_BROKER_URL = 'redis://redis:6379'
+CELERY_RESULT_BACKEND = 'redis://redis:6379'
 
-# REDIS related settings
-REDIS_HOST = 'localhost'
-REDIS_PORT = '6379'
-BROKER_URL = 'redis://' + REDIS_HOST + ':' + REDIS_PORT + '/0'
-BROKER_TRANSPORT_OPTIONS = {'visibility_timeout': 3600}
-CELERY_RESULT_BACKEND = 'redis://' + REDIS_HOST + ':' + REDIS_PORT + '/0'
+ALLOWED_HOSTS = ['*']
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -33,7 +31,6 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'rest_framework.authtoken',
-    'django_extensions',
     'django_filters',
     'djoser',
     'documents',
@@ -132,3 +129,11 @@ REST_FRAMEWORK = {
 }
 AUTH_USER_MODEL = 'documents.User'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+
+CELERY_BEAT_SCHEDULE = {
+    'remove_temp_files_task': {
+        'task': 'backend.tasks.remove_temp_files_task',
+        'schedule': crontab(minute='*/1'),
+    },
+}

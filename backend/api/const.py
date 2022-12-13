@@ -1,6 +1,6 @@
 # -*- coding: UTF-8 -*-
 
-TEMP_FILE_NAME = 'media/{name}.docx'
+TEMP_FILE_NAME = 'media/temp{name}.docx'
 FORMAT = "%d.%m.%Y"
 DAY_FORMAT = '« {date} »'
 NUMBER_BY_DATE = '{number} от {date}'

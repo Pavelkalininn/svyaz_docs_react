@@ -9,7 +9,7 @@ services:
     env_file:
       - ./.env
 
-  back_host:
+  backend:
     build:
       context: ../backend
       dockerfile: Dockerfile
@@ -19,6 +19,46 @@ services:
       - media_value:/app/media/
     depends_on:
       - db
+    env_file:
+      - ./.env
+
+  frontend:
+    build:
+      context: ../frontend
+      dockerfile: Dockerfile
+    restart: always
+    volumes:
+      - ../frontend:/app
+      - static_value:/app/build/static/
+    depends_on:
+      - back_host
+    env_file:
+      - ./.env
+
+  redis:
+    image: redis:alpine
+
+  celery:
+    build: ../backend
+    command: celery -A backend worker -l info
+    volumes:
+      - ../backend/:/usr/src/app/
+    environment:
+      - DJANGO_ALLOWED_HOSTS=localhost 127.0.0.1 [::1]
+    depends_on:
+      - redis
+    env_file:
+      - ./.env
+
+  celery-beat:
+    build: ../backend
+    command: celery -A backend beat -l info
+    volumes:
+      - ../backend/:/usr/src/app/
+    environment:
+      - DJANGO_ALLOWED_HOSTS=localhost 127.0.0.1 [::1]
+    depends_on:
+      - redis
     env_file:
       - ./.env
 
@@ -32,6 +72,7 @@ services:
       - static_value:/static/
       - media_value:/media/
     depends_on:
+      - frontend
       - back_host
 
 volumes:
