@@ -242,7 +242,6 @@ class WorkSerializer(ModelSerializer):
         fields = '__all__'
         model = Work
 
-    # self.work.act_analysis_production_date
     @staticmethod
     def get_conclusion_application_analyze_available(obj) -> bool:
         return bool(

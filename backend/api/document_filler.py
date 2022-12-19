@@ -43,6 +43,7 @@ from api.const import (
     PROTOCOL_START_SIMPLE_PLURAL,
     TEMP_FILE_NAME,
 )
+from api.serializers import WorkSerializer
 from api.utils import (
     obj_checker,
 )
@@ -315,9 +316,12 @@ class FillInDocument:
         ).first()
         if pattern:
             doc = Document(pattern.file)
-            obj_checker(doc, self.__get_changes())
+            changes = self.__get_changes()
+            if not changes:
+                raise 404
+            obj_checker(doc, changes)
             filename = escape_uri_path(
-                TEMP_FILE_NAME.format(name=work_name)
+                TEMP_FILE_NAME.format(name=f'{work_name}{datetime.now()}')
             )
             doc.save(filename)
             return filename
@@ -355,63 +359,65 @@ class FillInDocument:
         }
 
     def _application_decision(self) -> dict:
-        recognition_evidentiary_materials = []
-        qms_certificate_evidentiary = []
-        for value in doc_splitter(self.application.docs_with_application):
-            if is_qms(value):
-                qms_certificate_evidentiary.append(value)
-            if ('Протокол' in value
-                    or 'протокол' in value
-                    or 'СМК' in value
-                    or '9001' in value
-                    or 'анализа состояния' in value):
-                recognition_evidentiary_materials.append(value)
-        recognition_evidentiary_materials = '\n'.join(
-            recognition_evidentiary_materials)
-        agreement = self.application.applicant.informations.filter(
-                            date_issue__lte=self.work.application_decision_date
-                        ).first(
-                        ).agreements.first(
-                        )
-        return {
-            'application_num':
-                self.work.number,
-            'certification_decision_day':
-                DAY_FORMAT.format(
-                    date=self.work.application_decision_date.day
-                ),
-            'certification_decision_month':
-                MONTHS[self.work.application_decision_date.month - 1],
-            'certification_decision_year':
-                f'{self.work.application_decision_date.year}г.',
-            'application_dt':
-                date_format(self.work.date),
-            'applicant_name':
-                self.application.applicant.name,
-            'prod_name':
-                self.application.prod_name,
-            'manufacturer_name':
-                self.application.manufacturer.name,
-            'reglament':
-                self.application.reglament.name,
-            'certification_schem':
-                self.application.schem.name,
-            'recognition_as_evidentiary_materials':
-                recognition_evidentiary_materials,
-            'production_status_analysis':
-                'В соответствии с п.33 ТР ТС 018/2011 провести на основании'
-                ' анализа:\n'
-                + '\n'.join(qms_certificate_evidentiary),
-            'agreement_num_and_dt':
-                NUMBER_BY_DATE.format(
-                    number=agreement.number,
-                    date=date_format(agreement.date_issue)
-                ),
-            'head_of_product_certification':
-                self.work.decision_head.name,
-            'conclusion_application_analyze_expert':
-                self.work.conclusion_expert.name
-        }
+        if WorkSerializer(self.work).conclusion_application_analyze_available:
+            recognition_evidentiary_materials = []
+            qms_certificate_evidentiary = []
+            for value in doc_splitter(self.application.docs_with_application):
+                if is_qms(value):
+                    qms_certificate_evidentiary.append(value)
+                if ('Протокол' in value
+                        or 'протокол' in value
+                        or 'СМК' in value
+                        or '9001' in value
+                        or 'анализа состояния' in value):
+                    recognition_evidentiary_materials.append(value)
+            recognition_evidentiary_materials = '\n'.join(
+                recognition_evidentiary_materials)
+            agreement = self.application.applicant.informations.filter(
+                                date_issue__lte=self.work.application_decision_date
+                            ).first(
+                            ).agreements.first(
+                            )
+            return {
+                'application_num':
+                    self.work.number,
+                'certification_decision_day':
+                    DAY_FORMAT.format(
+                        date=self.work.application_decision_date.day
+                    ),
+                'certification_decision_month':
+                    MONTHS[self.work.application_decision_date.month - 1],
+                'certification_decision_year':
+                    f'{self.work.application_decision_date.year}г.',
+                'application_dt':
+                    date_format(self.work.date),
+                'applicant_name':
+                    self.application.applicant.name,
+                'prod_name':
+                    self.application.prod_name,
+                'manufacturer_name':
+                    self.application.manufacturer.name,
+                'reglament':
+                    self.application.reglament.name,
+                'certification_schem':
+                    self.application.schem.name,
+                'recognition_as_evidentiary_materials':
+                    recognition_evidentiary_materials,
+                'production_status_analysis':
+                    'В соответствии с п.33 ТР ТС 018/2011 провести на основании'
+                    ' анализа:\n'
+                    + '\n'.join(qms_certificate_evidentiary),
+                'agreement_num_and_dt':
+                    NUMBER_BY_DATE.format(
+                        number=agreement.number,
+                        date=date_format(agreement.date_issue)
+                    ),
+                'head_of_product_certification':
+                    self.work.decision_head.name,
+                'conclusion_application_analyze_expert':
+                    self.work.conclusion_expert.name
+            }
+        return
 
     def _product_evaluation_work_plan(self) -> dict:
         return {
