@@ -37,11 +37,11 @@ The DOCKER_USERNAME variable must be present in the Github secrets environment t
 
 ### It is necessary to execute the commands in the infra folder to launch a project, apply migrations, create a superuser, load static, respectively:
     
-    docker-compose -f docker-compose_prod.yml up -d --build
-    docker-compose -f docker-compose_prod.yml exec web python manage.py migrate
-    docker-compose -f docker-compose_prod.yml exec web python manage.py loaddata test_fixtures.json
-    docker-compose -f docker-compose_prod.yml exec web python manage.py createsuperuser
-    docker-compose -f docker-compose_prod.yml exec web python manage.py collectstatic --no-input
+    docker-compose -f docker-compose_develop.yml up -d --build
+    docker-compose -f docker-compose_develop.yml exec backend python manage.py migrate
+    docker-compose -f docker-compose_develop.yml exec backend python manage.py loaddata db.json
+    docker-compose -f docker-compose_develop.yml exec backend python manage.py createsuperuser
+    docker-compose -f docker-compose_develop.yml exec backend python manage.py collectstatic --no-input
 
 You need change docker-compose_prod.yml on docker-compose_develop.yml for running application in development mode with open ports and additional abilities
 

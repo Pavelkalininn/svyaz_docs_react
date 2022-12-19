@@ -29,6 +29,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'corsheaders',
     'rest_framework',
     'rest_framework.authtoken',
     'django_filters',
@@ -40,16 +41,23 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+
 ]
 
+CORS_ALLOW_CREDENTIALS = True
+CSRF_COOKIE_NAME = "csrftoken"
+CORS_ALLOWED_ORIGINS = [
+    'http://localhost:3000',
+    'http://127.0.0.1:3000'
+]
 ROOT_URLCONF = 'backend.urls'
-
-CSRF_TRUSTED_ORIGINS = ['diploma.sytes.net', 'localhost']
+CSRF_TRUSTED_ORIGINS = ['127.0.0.1:3000', 'localhost:3000']
 
 TEMPLATES = [
     {
@@ -68,6 +76,17 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'backend.wsgi.application'
+
+# DATABASES = {
+#     'default': {
+#         'ENGINE': os.getenv('DB_ENGINE', default='django.db.backends.postgresql'),
+#         'NAME': os.getenv('DB_NAME', default='postgres'),
+#         'USER': os.getenv('POSTGRES_USER', default='postgres'),
+#         'PASSWORD': os.getenv('POSTGRES_PASSWORD', default='postgres'),
+#         'HOST': os.getenv('DB_HOST', default='localhost'),
+#         'PORT': os.getenv('DB_PORT', default='5432'),
+#     }
+# }
 
 DATABASES = {
     'default': {
